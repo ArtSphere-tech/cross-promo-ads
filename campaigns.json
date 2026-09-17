@@ -18,7 +18,8 @@
       "creative_banner_url": "creatives/creative_cooking_banner.png",
       "creative_icon_url": "creatives/261c99a113c3_icon.png",
       "priority": 50,
-      "frequency_cap": 0
+      "frequency_cap": 0,
+      "is_active": true
     },
     {
       "id": "cmp_truck_all_units",
@@ -37,7 +38,8 @@
       "creative_banner_url": "creatives/creative_truck_banner.png",
       "creative_icon_url": "creatives/creative_truck_icon.png",
       "priority": 30,
-      "frequency_cap": 0
+      "frequency_cap": 0,
+      "is_active": true
     },
     {
       "id": "cmp_seaport_transition",
@@ -56,7 +58,8 @@
       "creative_banner_url": "creatives/creative_seaport_banner.png",
       "creative_icon_url": "creatives/creative_seaport_icon.png",
       "priority": 25,
-      "frequency_cap": 0
+      "frequency_cap": 0,
+      "is_active": true
     }
   ]
 }
