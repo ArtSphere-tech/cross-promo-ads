@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cross-Promotion Ad Control Center</title>
+  <title>Cross-Promotion Ad Control Center & Analytics</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Plus Jakarta Sans", sans-serif; }
     body { background-color: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
-    .container { max-width: 1240px; margin: 0 auto; }
+    .container { max-width: 1260px; margin: 0 auto; }
     
     header {
       display: flex;
@@ -30,9 +30,9 @@
       justify-content: space-between;
       align-items: center;
       gap: 1.5rem;
-      padding-bottom: 1.75rem;
+      padding-bottom: 1.5rem;
       border-bottom: 1px solid var(--card-border);
-      margin-bottom: 2rem;
+      margin-bottom: 1.75rem;
     }
     .brand h1 { font-size: 1.85rem; font-weight: 800; background: linear-gradient(135deg, #c7d2fe, #818cf8, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .brand p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
@@ -54,6 +54,38 @@
     .badge-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; animation: pulse 2s infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
+    /* Nav Tabs */
+    .nav-tabs { display: flex; gap: 0.75rem; margin-bottom: 1.75rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0.75rem; }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: white; background: rgba(255,255,255,0.04); }
+    .tab-btn.active { color: white; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4); }
+
+    /* Performance Stats Row */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      backdrop-filter: blur(12px);
+    }
+    .stat-title { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 1.9rem; font-weight: 800; margin: 0.35rem 0 0.2rem; color: #f8fafc; }
+    .stat-sub { font-size: 0.8rem; color: #34d399; font-weight: 600; }
+
     .grid-layout { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; }
     @media (max-width: 1024px) { .grid-layout { grid-template-columns: 1fr; } }
 
@@ -64,6 +96,7 @@
       padding: 1.5rem;
       backdrop-filter: blur(12px);
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      margin-bottom: 2rem;
     }
     .card-title {
       font-size: 1.25rem;
@@ -117,11 +150,7 @@
       align-items: center;
       transition: all 0.2s ease;
     }
-    .campaign-card.paused {
-      opacity: 0.65;
-      border-style: dashed;
-      background: rgba(20, 27, 45, 0.5);
-    }
+    .campaign-card.paused { opacity: 0.65; border-style: dashed; background: rgba(20, 27, 45, 0.5); }
     .campaign-thumb {
       width: 85px;
       height: 85px;
@@ -139,47 +168,49 @@
     .tag-priority { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
 
     /* Switch Component */
-    .switch-container {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.75rem;
-    }
+    .switch-container { display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem; }
     .toggle-wrap { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
     .toggle-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
     .toggle-label.active { color: #34d399; }
     .toggle-label.paused { color: #94a3b8; }
     
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 50px;
-      height: 26px;
-    }
+    .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #334155;
-      transition: 0.3s;
-      border-radius: 26px;
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #334155; transition: 0.3s; border-radius: 26px;
     }
     .slider:before {
-      position: absolute;
-      content: "";
-      height: 20px;
-      width: 20px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: 0.3s;
-      border-radius: 50%;
+      position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px;
+      background-color: white; transition: 0.3s; border-radius: 50%;
     }
     input:checked + .slider { background-color: #10b981; }
     input:checked + .slider:before { transform: translateX(24px); }
 
     .card-actions { display: flex; gap: 0.4rem; }
+
+    /* Analytics Table */
+    .table-responsive { width: 100%; overflow-x: auto; }
+    .analytics-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+    .analytics-table th { padding: 0.85rem 1rem; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--card-border); }
+    .analytics-table td { padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+    .analytics-table tr:hover { background: rgba(255,255,255,0.02); }
+    
+    .ctr-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .ctr-high { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .ctr-med { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .ctr-low { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
+
+    .progress-bar { width: 100px; height: 6px; background: #1e293b; border-radius: 6px; overflow: hidden; margin-top: 4px; }
+    .progress-fill { height: 100%; border-radius: 6px; }
 
     /* Phone Simulator */
     .simulator-container { display: flex; flex-direction: column; align-items: center; }
@@ -200,23 +231,28 @@
       height: 20px;
       background: #1e293b;
       position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      border-bottom-left-radius: 10px;
-      border-bottom-right-radius: 10px;
+      top: 0; left: 50%; transform: translateX(-50%);
+      border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;
       z-index: 50;
     }
-    .device-screen {
-      flex: 1;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+    .device-screen { flex: 1; width: 100%; height: 100%; background: #000; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+    
+    /* Prominent AD Badge on Simulator */
+    .sim-ad-badge {
+      position: absolute;
+      top: 28px;
+      left: 12px;
+      background: #f59e0b;
+      color: #000;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 0.2rem 0.55rem;
+      border-radius: 5px;
+      letter-spacing: 0.5px;
+      z-index: 40;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
+
     .ad-creative-img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .ad-close-btn {
       position: absolute;
@@ -350,60 +386,127 @@
   <div class="container">
     <header>
       <div class="brand">
-        <h1>Cross-Promotion Control Center</h1>
-        <p>Live 24/7 Ad Server & Management Dashboard • Zero downtime</p>
+        <h1>Cross-Promotion Control Center & Analytics</h1>
+        <p>Live 24/7 Ad Server • Performance & CTR Tracking • Zero downtime</p>
       </div>
       <div class="header-actions">
-        <span class="badge-status"><span class="badge-dot"></span> GitHub Pages Live</span>
+        <span class="badge-status"><span class="badge-dot"></span> 24/7 Edge CDN</span>
         <button class="btn btn-outline" onclick="openTokenModal()">🔑 GitHub Token</button>
         <button class="btn btn-success" id="btnSync" onclick="saveAndPublishToGitHub()">💾 Publish Changes</button>
       </div>
     </header>
 
-    <div class="grid-layout">
-      <!-- Left Column: Campaigns List -->
-      <div>
-        <div class="card">
-          <div class="card-title">
-            <span>📢 In-Game Ad Campaigns</span>
-            <button class="btn" onclick="openCreateModal()">+ Add Campaign</button>
-          </div>
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" id="tabBtnCampaigns" onclick="switchTab('campaigns')">📢 In-Game Ads</button>
+      <button class="tab-btn" id="tabBtnAnalytics" onclick="switchTab('analytics')">📊 Performance & CTR Dashboard</button>
+    </div>
 
-          <div class="campaign-list" id="campaignsContainer">
-            <!-- Populated dynamically -->
+    <!-- Overview Stats (Shown on both views) -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">Total Impressions</div>
+        <div class="stat-value" id="statTotalImp">0</div>
+        <div class="stat-sub">Across all connected games</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Total Ad Clicks</div>
+        <div class="stat-value" id="statTotalClicks">0</div>
+        <div class="stat-sub">Store page redirects</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Average Studio CTR</div>
+        <div class="stat-value" id="statAvgCtr">0.0%</div>
+        <div class="stat-sub">Click-Through Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Active Campaigns</div>
+        <div class="stat-value" id="statActiveCount">0</div>
+        <div class="stat-sub" id="statTopCampaign">Top: None</div>
+      </div>
+    </div>
+
+    <!-- VIEW 1: Campaigns & Simulator -->
+    <div id="viewCampaigns">
+      <div class="grid-layout">
+        <!-- Left: Campaign Cards -->
+        <div>
+          <div class="card">
+            <div class="card-title">
+              <span>📢 In-Game Ad Campaigns</span>
+              <button class="btn" onclick="openCreateModal()">+ Add Campaign</button>
+            </div>
+
+            <div class="campaign-list" id="campaignsContainer">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Simulator -->
+        <div>
+          <div class="card simulator-container">
+            <div class="card-title" style="width: 100%;">
+              <span>📱 Live Mobile Preview</span>
+            </div>
+
+            <div class="unit-selector">
+              <button class="unit-btn active" onclick="filterSimulator('all')">All Units</button>
+              <button class="unit-btn" onclick="filterSimulator('main_play_button')">Main Play Button</button>
+              <button class="unit-btn" onclick="filterSimulator('scene_transition')">Scene Transition</button>
+            </div>
+
+            <div class="device-frame">
+              <div class="device-notch"></div>
+              <div class="device-screen" id="simScreen">
+                <!-- AD Badge on Simulator -->
+                <div class="sim-ad-badge">AD</div>
+                <button class="ad-close-btn" id="simCloseBtn" onclick="closeSimAd()">3</button>
+                <img id="simImage" class="ad-creative-img" src="" alt="Ad Creative">
+                <div class="ad-bottom-bar">
+                  <h4 id="simTitle">Loading...</h4>
+                  <p id="simDesc">Tap button to test target link</p>
+                  <a id="simLink" href="#" target="_blank" class="btn-install" onclick="recordSimClick()">PLAY NOW FREE &rarr;</a>
+                </div>
+              </div>
+            </div>
+
+            <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); text-align: center;">
+              Notice the <strong>AD</strong> badge in the top-left corner. Testing "PLAY NOW" records a click in the CTR dashboard!
+            </p>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Right Column: Live Mobile Simulator -->
-      <div>
-        <div class="card simulator-container">
-          <div class="card-title" style="width: 100%;">
-            <span>📱 Mobile Ad Simulator</span>
+    <!-- VIEW 2: Analytics & CTR Performance Dashboard -->
+    <div id="viewAnalytics" style="display: none;">
+      <div class="card">
+        <div class="card-title">
+          <span>📊 Campaign Performance Breakdown (CTR %)</span>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-outline btn-sm" onclick="exportStatsCSV()">📥 Export CSV</button>
+            <button class="btn btn-outline btn-sm" onclick="promptResetAllStats()">🔄 Reset Stats</button>
           </div>
+        </div>
 
-          <div class="unit-selector">
-            <button class="unit-btn active" onclick="filterSimulator('all')">All Units</button>
-            <button class="unit-btn" onclick="filterSimulator('main_play_button')">Main Play Button</button>
-            <button class="unit-btn" onclick="filterSimulator('scene_transition')">Scene Transition</button>
-          </div>
-
-          <div class="device-frame">
-            <div class="device-notch"></div>
-            <div class="device-screen" id="simScreen">
-              <button class="ad-close-btn" id="simCloseBtn" onclick="closeSimAd()">3</button>
-              <img id="simImage" class="ad-creative-img" src="" alt="Ad Creative">
-              <div class="ad-bottom-bar">
-                <h4 id="simTitle">Loading...</h4>
-                <p id="simDesc">Tap button to test target link</p>
-                <a id="simLink" href="#" target="_blank" class="btn-install">PLAY NOW FREE &rarr;</a>
-              </div>
-            </div>
-          </div>
-
-          <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); text-align: center;">
-            Toggle campaigns ON/OFF on the left to immediately control which ads run in your games!
-          </p>
+        <div class="table-responsive">
+          <table class="analytics-table">
+            <thead>
+              <tr>
+                <th>Campaign & Game</th>
+                <th>Ad Unit</th>
+                <th>Status</th>
+                <th>Impressions</th>
+                <th>Clicks</th>
+                <th>CTR %</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="analyticsTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -489,12 +592,31 @@
     </div>
   </div>
 
+  <!-- Modal: Edit Stats -->
+  <div class="modal-overlay" id="statsModal">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-title" id="statsModalTitle">Edit Performance Stats</div>
+      <div class="form-group">
+        <label class="form-label">Impressions</label>
+        <input type="number" id="inpStatsImp" class="form-input" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Clicks</label>
+        <input type="number" id="inpStatsClicks" class="form-input" min="0">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+        <button class="btn btn-outline" onclick="closeStatsModal()">Cancel</button>
+        <button class="btn btn-success" onclick="saveCampaignStats()">Save Stats</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: GitHub Token Configuration -->
   <div class="modal-overlay" id="tokenModal">
     <div class="modal-content" style="max-width: 460px;">
       <div class="modal-title">🔑 GitHub Authorization</div>
       <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.4;">
-        Your Personal Access Token allows this dashboard to save campaigns and upload graphics directly to your GitHub repository with 1 click!
+        Your Personal Access Token allows this dashboard to save campaigns, toggles, and graphics directly to your GitHub repository with 1 click!
       </p>
       <div class="form-group">
         <label class="form-label">Personal Access Token</label>
@@ -516,6 +638,7 @@
     let currentSimIndex = 0;
     let countdownInterval = null;
     let editingCampaignId = null;
+    let editingStatsCampaignId = null;
     let selectedImageFile = null;
     let selectedImageBase64 = null;
 
@@ -524,17 +647,56 @@
       return localStorage.getItem("cp_github_token") || DEFAULT_TOKEN;
     }
 
+    function switchTab(tab) {
+      document.getElementById("tabBtnCampaigns").classList.toggle("active", tab === "campaigns");
+      document.getElementById("tabBtnAnalytics").classList.toggle("active", tab === "analytics");
+      document.getElementById("viewCampaigns").style.display = tab === "campaigns" ? "block" : "none";
+      document.getElementById("viewAnalytics").style.display = tab === "analytics" ? "block" : "none";
+      if (tab === "analytics") renderAnalyticsTable();
+    }
+
     async function loadCampaigns() {
       try {
         const res = await fetch("./campaigns.json?t=" + Date.now());
         const data = await res.json();
         allCampaigns = data.campaigns || [];
+        updateOverviewStats();
         renderCampaigns();
+        renderAnalyticsTable();
         showSimAd(0);
       } catch (err) {
         console.error("Failed to load campaigns.json:", err);
         showToast("⚠️ Could not load campaigns.json", true);
       }
+    }
+
+    function updateOverviewStats() {
+      let totalImp = 0;
+      let totalClicks = 0;
+      let activeCount = 0;
+      let topCamp = null;
+      let topCtr = -1;
+
+      allCampaigns.forEach(c => {
+        const imp = c.impressions || 0;
+        const clicks = c.clicks || 0;
+        totalImp += imp;
+        totalClicks += clicks;
+        if (c.is_active !== false) activeCount++;
+
+        const ctr = imp > 0 ? (clicks / imp) * 100 : 0;
+        if (ctr > topCtr && imp >= 10) {
+          topCtr = ctr;
+          topCamp = (c.title || c.name) + " (" + ctr.toFixed(1) + "%)";
+        }
+      });
+
+      const avgCtr = totalImp > 0 ? ((totalClicks / totalImp) * 100).toFixed(1) + "%" : "0.0%";
+      document.getElementById("statTotalImp").innerText = totalImp.toLocaleString();
+      document.getElementById("statTotalClicks").innerText = totalClicks.toLocaleString();
+      document.getElementById("statAvgCtr").innerText = avgCtr;
+      document.getElementById("statActiveCount").innerText = activeCount + " Active";
+      if (topCamp) document.getElementById("statTopCampaign").innerText = "Top: " + topCamp;
     }
 
     function renderCampaigns() {
@@ -545,7 +707,10 @@
       allCampaigns.forEach((c, idx) => {
         const isActive = (c.is_active !== false);
         const thumb = c.creative_interstitial_url || c.creative_banner_url || c.creative_icon_url || "creatives/273a86dd5b1b_Boy_lowering_wooden_bow_202609071548.jpeg";
-        
+        const imp = c.impressions || 0;
+        const clicks = c.clicks || 0;
+        const ctr = imp > 0 ? ((clicks / imp) * 100).toFixed(1) + "%" : "0.0%";
+
         const card = document.createElement("div");
         card.className = "campaign-card " + (isActive ? "" : "paused");
         card.innerHTML = `
@@ -559,7 +724,8 @@
             <div class="tags">
               <span class="tag tag-unit">Unit: ${c.ad_unit || "all"}</span>
               <span class="tag tag-priority">Weight: ${c.priority || 10}</span>
-              <span class="tag">Target: ${c.target_game_id || "global"}</span>
+              <span class="tag" style="background:rgba(16,185,129,0.15); color:#34d399;">CTR: ${ctr}</span>
+              <span class="tag">${clicks} clicks / ${imp} views</span>
             </div>
           </div>
           <div class="switch-container">
@@ -580,9 +746,54 @@
       });
     }
 
+    function renderAnalyticsTable() {
+      const tbody = document.getElementById("analyticsTableBody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      allCampaigns.forEach((c, idx) => {
+        const isActive = (c.is_active !== false);
+        const imp = c.impressions || 0;
+        const clicks = c.clicks || 0;
+        const ctrVal = imp > 0 ? ((clicks / imp) * 100) : 0;
+        const ctrStr = ctrVal.toFixed(1) + "%";
+
+        let ctrClass = "ctr-low";
+        let fillBg = "#94a3b8";
+        if (ctrVal >= 10) { ctrClass = "ctr-high"; fillBg = "#10b981"; }
+        else if (ctrVal >= 5) { ctrClass = "ctr-med"; fillBg = "#f59e0b"; }
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>
+            <div style="font-weight: 700; color: #f8fafc;">${c.title || c.name}</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">${c.target_game_id || "global"}</div>
+          </td>
+          <td><span class="tag tag-unit">${c.ad_unit || "all"}</span></td>
+          <td>
+            ${isActive ? "<span style='color:#10b981; font-weight:700;'>● Active</span>" : "<span style='color:#94a3b8;'>○ Paused</span>"}
+          </td>
+          <td style="font-weight: 600;">${imp.toLocaleString()}</td>
+          <td style="font-weight: 600;">${clicks.toLocaleString()}</td>
+          <td>
+            <span class="ctr-badge ${ctrClass}">${ctrStr}</span>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${Math.min(100, ctrVal * 5)}%; background: ${fillBg};"></div>
+            </div>
+          </td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="openStatsModal('${c.id}')">✏️ Edit Stats</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
     function toggleCampaignActive(idx) {
       allCampaigns[idx].is_active = (allCampaigns[idx].is_active === false) ? true : false;
+      updateOverviewStats();
       renderCampaigns();
+      renderAnalyticsTable();
       showToast(allCampaigns[idx].is_active ? "🟢 Ad turned ON! Saving..." : "⏸️ Ad turned OFF! Saving...");
       autoSaveToGitHub();
     }
@@ -592,11 +803,77 @@
       if (!camp) return;
       if (confirm("Are you sure you want to delete '" + (camp.title || camp.name) + "'?")) {
         allCampaigns = allCampaigns.filter(c => c.id !== id);
+        updateOverviewStats();
         renderCampaigns();
+        renderAnalyticsTable();
         showSimAd(0);
         showToast("🗑️ Campaign deleted. Saving changes...");
         autoSaveToGitHub();
       }
+    }
+
+    function openStatsModal(id) {
+      const c = allCampaigns.find(item => item.id === id);
+      if (!c) return;
+      editingStatsCampaignId = id;
+      document.getElementById("statsModalTitle").innerText = "Edit Stats: " + (c.title || c.name);
+      document.getElementById("inpStatsImp").value = c.impressions || 0;
+      document.getElementById("inpStatsClicks").value = c.clicks || 0;
+      document.getElementById("statsModal").style.display = "flex";
+    }
+    function closeStatsModal() {
+      document.getElementById("statsModal").style.display = "none";
+    }
+    function saveCampaignStats() {
+      const c = allCampaigns.find(item => item.id === editingStatsCampaignId);
+      if (!c) return;
+      c.impressions = parseInt(document.getElementById("inpStatsImp").value) || 0;
+      c.clicks = parseInt(document.getElementById("inpStatsClicks").value) || 0;
+      closeStatsModal();
+      updateOverviewStats();
+      renderCampaigns();
+      renderAnalyticsTable();
+      showToast("💾 Performance stats updated! Saving to GitHub...");
+      autoSaveToGitHub();
+    }
+
+    function promptResetAllStats() {
+      if (confirm("Reset impressions and clicks to 0 for all campaigns?")) {
+        allCampaigns.forEach(c => { c.impressions = 0; c.clicks = 0; });
+        updateOverviewStats();
+        renderCampaigns();
+        renderAnalyticsTable();
+        showToast("🔄 Stats reset! Saving to GitHub...");
+        autoSaveToGitHub();
+      }
+    }
+
+    function recordSimClick() {
+      if (!allCampaigns || allCampaigns.length === 0) return;
+      const c = allCampaigns[currentSimIndex];
+      c.clicks = (c.clicks || 0) + 1;
+      updateOverviewStats();
+      renderCampaigns();
+      renderAnalyticsTable();
+      showToast("🎯 Ad Click recorded! (Total clicks: " + c.clicks + ")");
+    }
+
+    function exportStatsCSV() {
+      let csv = "Campaign ID,Game Title,Target Game ID,Ad Unit,Status,Impressions,Clicks,CTR%
+";
+      allCampaigns.forEach(c => {
+        const imp = c.impressions || 0;
+        const clk = c.clicks || 0;
+        const ctr = imp > 0 ? ((clk / imp) * 100).toFixed(2) + "%" : "0.00%";
+        csv += `"${c.id}","${c.title || c.name}","${c.target_game_id}","${c.ad_unit}","${c.is_active !== false ? 'Active' : 'Paused'}",${imp},${clk},${ctr}
+`;
+      });
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "cross_promo_performance_" + Date.now() + ".csv";
+      a.click();
     }
 
     function openCreateModal() {
@@ -682,7 +959,6 @@
         if (exist && exist.creative_interstitial_url) creativeUrl = exist.creative_interstitial_url;
       }
 
-      // If new image was chosen, upload to GitHub creatives/
       if (selectedImageFile && selectedImageBase64) {
         const cleanName = Date.now() + "_" + selectedImageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         showToast("⏳ Uploading ad graphic to GitHub...");
@@ -726,13 +1002,17 @@
           creative_banner_url: "creatives/creative_cooking_banner.png",
           creative_icon_url: "creatives/261c99a113c3_icon.png",
           priority: priority,
-          frequency_cap: 0
+          frequency_cap: 0,
+          impressions: 0,
+          clicks: 0
         };
         allCampaigns.unshift(newCamp);
       }
 
       closeModal();
+      updateOverviewStats();
       renderCampaigns();
+      renderAnalyticsTable();
       showSimAd(0);
       showToast("💾 Saving campaign to GitHub...");
       await autoSaveToGitHub();
@@ -839,6 +1119,10 @@
       title.innerText = c.title || c.name;
       desc.innerText = c.description || "";
       link.href = c.target_url_android || c.target_url || "#";
+
+      // Increment simulator preview impression
+      c.impressions = (c.impressions || 0) + 1;
+      updateOverviewStats();
 
       if (countdownInterval) clearInterval(countdownInterval);
       let count = 3;
