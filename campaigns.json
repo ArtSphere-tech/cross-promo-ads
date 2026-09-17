@@ -20,30 +20,8 @@
       "priority": 50,
       "frequency_cap": 0,
       "is_active": true,
-      "impressions": 1282,
+      "impressions": 1283,
       "clicks": 182
-    },
-    {
-      "id": "cmp_seaport_transition",
-      "name": "My City: Seaport Harbor - Scene Transition",
-      "target_game_id": "seaport_city",
-      "platform": "all",
-      "title": "My City: Seaport Harbor",
-      "description": "Build ships, trade goods, and explore island adventures!",
-      "target_url": "https://play.google.com/store/apps/details?id=com.studio.seaportcity",
-      "target_url_android": "https://play.google.com/store/apps/details?id=com.studio.seaportcity",
-      "target_url_ios": "https://apps.apple.com/app/seaport-city/id456789123",
-      "target_url_web": "https://play.google.com/store/apps/details?id=com.studio.seaportcity",
-      "ad_type": "interstitial",
-      "ad_unit": "scene_transition",
-      "creative_interstitial_url": "creatives/creative_seaport_interstitial.png",
-      "creative_banner_url": "creatives/creative_seaport_banner.png",
-      "creative_icon_url": "creatives/creative_seaport_icon.png",
-      "priority": 25,
-      "frequency_cap": 0,
-      "is_active": true,
-      "impressions": 620,
-      "clicks": 71
     }
   ]
 }
