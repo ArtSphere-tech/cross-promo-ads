@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cross-Promotion CDN & Ad Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(22, 29, 47, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --accent: #f59e0b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Plus Jakarta Sans", sans-serif; }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 2rem;
+    }
+    .brand h1 { font-size: 1.75rem; font-weight: 800; background: linear-gradient(135deg, #a5b4fc, #6366f1, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .brand p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.4rem 0.9rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .badge-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .grid-layout { display: grid; grid-template-columns: 1fr 420px; gap: 2rem; }
+    @media (max-width: 950px) { .grid-layout { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .card-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+    
+    /* Campaign Cards */
+    .campaign-list { display: flex; flex-direction: column; gap: 1rem; }
+    .campaign-card {
+      background: rgba(30, 41, 69, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: 1.25rem;
+      align-items: center;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .campaign-card:hover { transform: translateY(-2px); border-color: rgba(99, 102, 241, 0.4); }
+    .campaign-thumb {
+      width: 80px;
+      height: 80px;
+      border-radius: 10px;
+      background: #0f172a;
+      object-fit: cover;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .campaign-info h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .campaign-info p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.35; margin-bottom: 0.5rem; }
+    .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+    }
+    .tag-unit { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
+    .tag-priority { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
+    /* Phone Simulator */
+    .simulator-container { display: flex; flex-direction: column; align-items: center; }
+    .device-frame {
+      width: 320px;
+      height: 580px;
+      background: #0f172a;
+      border: 10px solid #1e293b;
+      border-radius: 40px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .device-notch {
+      width: 130px;
+      height: 22px;
+      background: #1e293b;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      z-index: 50;
+    }
+    .device-screen {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .ad-creative-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .ad-close-btn {
+      position: absolute;
+      top: 32px;
+      right: 14px;
+      background: rgba(0,0,0,0.75);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 40;
+    }
+    .ad-bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1.25rem 1rem;
+      background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 70%, transparent 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 30;
+    }
+    .ad-bottom-bar h4 { font-size: 1rem; font-weight: 700; }
+    .ad-bottom-bar p { font-size: 0.78rem; color: #cbd5e1; }
+    .btn-install {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 0.65rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.4);
+    }
+    .btn-install:hover { opacity: 0.9; }
+
+    /* Controls & Guide */
+    .controls { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text);
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.05); }
+
+    .unit-selector {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .unit-btn {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .unit-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .guide-box {
+      margin-top: 2rem;
+      background: rgba(30, 41, 69, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .guide-step { display: flex; gap: 1rem; margin-bottom: 1rem; }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .step-text h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.2rem; }
+    .step-text p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+    code {
+      background: rgba(0,0,0,0.4);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      color: #38bdf8;
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <h1>Cross-Promotion 24/7 CDN Feed</h1>
+        <p>Permanently hosted on GitHub Pages • Zero downtime • Offline caching</p>
+      </div>
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <span class="badge-status"><span class="badge-dot"></span> Live 24/7 Edge CDN</span>
+        <a href="campaigns.json" target="_blank" class="btn btn-outline">📄 View Raw JSON</a>
+      </div>
+    </header>
+
+    <div class="grid-layout">
+      <!-- Left Column: Campaigns & Management -->
+      <div>
+        <div class="card" style="margin-bottom: 2rem;">
+          <div class="card-title">
+            <span>📢 Active Studio Campaigns</span>
+            <button class="btn" onclick="openAddModal()">+ Add Campaign</button>
+          </div>
+          <div class="campaign-list" id="campaignsContainer">
+            <!-- Populated dynamically from campaigns.json -->
+          </div>
+        </div>
+
+        <!-- Setup Guide for GitHub Pages -->
+        <div class="card">
+          <div class="card-title">🚀 How to Deploy on GitHub Pages in 3 Minutes</div>
+          <div class="guide-box" style="margin-top: 0;">
+            <div class="guide-step">
+              <div class="step-num">1</div>
+              <div class="step-text">
+                <h4>Create a New GitHub Repository</h4>
+                <p>Go to <a href="https://github.com/new" target="_blank" style="color:#a5b4fc;">github.com/new</a>, name it <code>cross-promo-ads</code>, and make it <strong>Public</strong>.</p>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="step-num">2</div>
+              <div class="step-text">
+                <h4>Upload This Entire Folder</h4>
+                <p>Drag and drop the contents of <code>CrossPromo_GitHubPages</code> (or run <code>bash publish_to_github.sh</code>) and commit changes to <code>main</code>.</p>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="step-num">3</div>
+              <div class="step-text">
+                <h4>Turn on GitHub Pages</h4>
+                <p>In your repo, go to <strong>Settings</strong> &rarr; <strong>Pages</strong>. Under <em>Branch</em>, select <code>main</code>, folder <code>/ (root)</code>, and click <strong>Save</strong>.</p>
+              </div>
+            </div>
+            <div class="guide-step" style="margin-bottom: 0;">
+              <div class="step-num">4</div>
+              <div class="step-text">
+                <h4>Paste Your Link in Unity</h4>
+                <p>Copy your GitHub Pages link (e.g. <code>https://&lt;username&gt;.github.io/cross-promo-ads</code>) into <code>CrossPromoInitializer.cs</code> in your game projects!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Live Mobile Ad Simulator -->
+      <div>
+        <div class="card simulator-container">
+          <div class="card-title" style="width: 100%;">
+            <span>📱 In-Game Ad Preview</span>
+          </div>
+
+          <div class="unit-selector">
+            <button class="unit-btn active" onclick="filterSimulator("all")">All Units</button>
+            <button class="unit-btn" onclick="filterSimulator("main_play_button")">Main Play Button</button>
+            <button class="unit-btn" onclick="filterSimulator("scene_transition")">Scene Transition</button>
+          </div>
+
+          <div class="device-frame">
+            <div class="device-notch"></div>
+            <div class="device-screen" id="simScreen">
+              <button class="ad-close-btn" id="simCloseBtn" onclick="closeSimAd()">3</button>
+              <img id="simImage" class="ad-creative-img" src="" alt="Ad Creative">
+              <div class="ad-bottom-bar">
+                <h4 id="simTitle">Loading Ad...</h4>
+                <p id="simDesc">Tap button to test target link</p>
+                <a id="simLink" href="#" target="_blank" class="btn-install">PLAY NOW FREE &rarr;</a>
+              </div>
+            </div>
+          </div>
+
+          <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); text-align: center;">
+            Simulating ad appearance inside Unity games with countdown close timer & responsive scaling.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allCampaigns = [];
+    let currentSimIndex = 0;
+    let countdownInterval = null;
+
+    async function loadCampaigns() {
+      try {
+        const res = await fetch("./campaigns.json");
+        const data = await res.json();
+        allCampaigns = data.campaigns || [];
+        renderCampaigns();
+        showSimAd(0);
+      } catch (err) {
+        console.error("Failed to load campaigns.json:", err);
+      }
+    }
+
+    function renderCampaigns() {
+      const container = document.getElementById("campaignsContainer");
+      if (!container) return;
+      container.innerHTML = "";
+
+      allCampaigns.forEach((c, idx) => {
+        const thumb = c.creative_icon_url || c.creative_interstitial_url || c.creative_banner_url;
+        const card = document.createElement("div");
+        card.className = "campaign-card";
+        card.innerHTML = `
+          <img src="${thumb}" class="campaign-thumb" onerror="this.src="creatives/creative_cooking_icon.png"">
+          <div class="campaign-info">
+            <h3>${c.title || c.name}</h3>
+            <p>${c.description || "No description provided."}</p>
+            <div class="tags">
+              <span class="tag tag-unit">Unit: ${c.ad_unit || "all"}</span>
+              <span class="tag tag-priority">Priority: ${c.priority || 10}</span>
+              <span class="tag">Type: ${c.ad_type}</span>
+              <span class="tag">Target: ${c.target_game_id || "global"}</span>
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="showSimAd(${idx})">Preview</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function showSimAd(idx) {
+      if (!allCampaigns || allCampaigns.length === 0) return;
+      currentSimIndex = idx % allCampaigns.length;
+      const c = allCampaigns[currentSimIndex];
+
+      const img = document.getElementById("simImage");
+      const title = document.getElementById("simTitle");
+      const desc = document.getElementById("simDesc");
+      const link = document.getElementById("simLink");
+      const closeBtn = document.getElementById("simCloseBtn");
+
+      img.src = c.creative_interstitial_url || c.creative_banner_url;
+      title.innerText = c.title || c.name;
+      desc.innerText = c.description || "";
+      link.href = c.target_url_android || c.target_url || "#";
+
+      // Reset countdown
+      if (countdownInterval) clearInterval(countdownInterval);
+      let count = 3;
+      closeBtn.innerText = count;
+      closeBtn.style.pointerEvents = "none";
+      closeBtn.style.opacity = "0.7";
+
+      countdownInterval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          closeBtn.innerText = count;
+        } else {
+          clearInterval(countdownInterval);
+          closeBtn.innerText = "✕";
+          closeBtn.style.pointerEvents = "auto";
+          closeBtn.style.opacity = "1";
+        }
+      }, 1000);
+    }
+
+    function closeSimAd() {
+      // Advance to next ad
+      showSimAd(currentSimIndex + 1);
+    }
+
+    function filterSimulator(unit) {
+      document.querySelectorAll(".unit-btn").forEach(b => b.classList.remove("active"));
+      event.target.classList.add("active");
+
+      if (unit === "all") {
+        showSimAd(0);
+        return;
+      }
+      const foundIdx = allCampaigns.findIndex(c => c.ad_unit === unit || c.ad_unit === "all");
+      if (foundIdx !== -1) {
+        showSimAd(foundIdx);
+      }
+    }
+
+    function openAddModal() {
+      const title = prompt("Enter Game Title (e.g. Cooking Fun):");
+      if (!title) return;
+      const url = prompt("Enter Google Play Store link:");
+      if (!url) return;
+      const unit = prompt("Enter Ad Unit (main_play_button, scene_transition, or all):", "all") || "all";
+
+      const newCamp = {
+        id: "cmp_" + Date.now().toString(36),
+        name: title,
+        target_game_id: title.toLowerCase().replace(/[^a-z0-9]/g, "_"),
+        platform: "all",
+        title: title,
+        description: "Play free now!",
+        target_url: url,
+        target_url_android: url,
+        target_url_ios: url,
+        target_url_web: url,
+        ad_type: "interstitial",
+        ad_unit: unit,
+        creative_interstitial_url: "creatives/creative_cooking_interstitial.png",
+        creative_banner_url: "creatives/creative_cooking_banner.png",
+        creative_icon_url: "creatives/creative_cooking_icon.png",
+        priority: 30,
+        frequency_cap: 0
+      };
+
+      allCampaigns.push(newCamp);
+      renderCampaigns();
+      alert("New campaign added to preview! Click raw JSON or download to commit to GitHub.");
+    }
+
+    window.addEventListener("DOMContentLoaded", loadCampaigns);
+  </script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+{
+  "success": true,
+  "campaigns": [
+    {
+      "id": "cmp_cooking_play_button",
+      "name": "Cooking Fun - Main Play Button Special",
+      "target_game_id": "cooking_fun",
+      "platform": "all",
+      "title": "Cooking Fun: Tasty Kitchen",
+      "description": "Play free now! Cook delicious dishes and build your restaurant!",
+      "target_url": "https://play.google.com/store/apps/details?id=com.myFamilytown.playtogether.city.stories",
+      "target_url_android": "https://play.google.com/store/apps/details?id=com.myFamilytown.playtogether.city.stories",
+      "target_url_ios": "https://apps.apple.com/app/cooking-fun/id123456789",
+      "target_url_web": "https://play.google.com/store/apps/details?id=com.myFamilytown.playtogether.city.stories",
+      "ad_type": "interstitial",
+      "ad_unit": "main_play_button",
+      "creative_interstitial_url": "creatives/273a86dd5b1b_Boy_lowering_wooden_bow_202609071548.jpeg",
+      "creative_banner_url": "creatives/creative_cooking_banner.png",
+      "creative_icon_url": "creatives/261c99a113c3_icon.png",
+      "priority": 50,
+      "frequency_cap": 0
+    },
+    {
+      "id": "cmp_truck_all_units",
+      "name": "Offroad Trucker 3D - Hill Climb",
+      "target_game_id": "offroad_trucker",
+      "platform": "all",
+      "title": "Offroad Trucker 3D: Extreme Hills",
+      "description": "Conquer extreme muddy trails and deliver cargo across tough terrains!",
+      "target_url": "https://play.google.com/store/apps/details?id=com.studio.offroadtrucker",
+      "target_url_android": "https://play.google.com/store/apps/details?id=com.studio.offroadtrucker",
+      "target_url_ios": "https://apps.apple.com/app/offroad-trucker-3d/id987654321",
+      "target_url_web": "https://play.google.com/store/apps/details?id=com.studio.offroadtrucker",
+      "ad_type": "both",
+      "ad_unit": "all",
+      "creative_interstitial_url": "creatives/creative_truck_interstitial.png",
+      "creative_banner_url": "creatives/creative_truck_banner.png",
+      "creative_icon_url": "creatives/creative_truck_icon.png",
+      "priority": 30,
+      "frequency_cap": 0
+    },
+    {
+      "id": "cmp_seaport_transition",
+      "name": "My City: Seaport Harbor - Scene Transition",
+      "target_game_id": "seaport_city",
+      "platform": "all",
+      "title": "My City: Seaport Harbor",
+      "description": "Build ships, trade goods, and explore island adventures!",
+      "target_url": "https://play.google.com/store/apps/details?id=com.studio.seaportcity",
+      "target_url_android": "https://play.google.com/store/apps/details?id=com.studio.seaportcity",
+      "target_url_ios": "https://apps.apple.com/app/seaport-city/id456789123",
+      "target_url_web": "https://play.google.com/store/apps/details?id=com.studio.seaportcity",
+      "ad_type": "interstitial",
+      "ad_unit": "scene_transition",
+      "creative_interstitial_url": "creatives/creative_seaport_interstitial.png",
+      "creative_banner_url": "creatives/creative_seaport_banner.png",
+      "creative_icon_url": "creatives/creative_seaport_icon.png",
+      "priority": 25,
+      "frequency_cap": 0
+    }
+  ]
+}
