@@ -14,13 +14,13 @@
       "target_url_web": "https://play.google.com/store/apps/details?id=com.myFamilytown.playtogether.city.stories",
       "ad_type": "interstitial",
       "ad_unit": "main_play_button",
-      "creative_interstitial_url": "creatives/1789658239628_ChatGPT_Image_Sep_8__2026__07_18_45_PM.png",
+      "creative_interstitial_url": "creatives/1789658273660_Boy_retrieves_wooden_arrow_202609071542.jpeg",
       "creative_banner_url": "creatives/creative_cooking_banner.png",
       "creative_icon_url": "creatives/261c99a113c3_icon.png",
       "priority": 50,
       "frequency_cap": 0,
       "is_active": true,
-      "impressions": 1288,
+      "impressions": 1289,
       "clicks": 182
     }
   ]
