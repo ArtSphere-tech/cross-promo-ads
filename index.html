@@ -3,27 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cross-Promotion Ad Control Center & Analytics</title>
+  <title>ArtSphere AdMatrix™ — Enterprise Cross-Promotion & Ad Operations Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16;
-      --card-bg: rgba(22, 29, 47, 0.88);
-      --card-border: rgba(255, 255, 255, 0.08);
+      --bg-dark: #07090e;
+      --bg-surface: rgba(15, 21, 37, 0.82);
+      --bg-card: rgba(20, 29, 52, 0.72);
+      --bg-card-hover: rgba(28, 41, 74, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.07);
+      --border-focus: rgba(99, 102, 241, 0.45);
       --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.35);
       --primary-hover: #4f46e5;
+      --accent-cyan: #06b6d4;
+      --accent-cyan-glow: rgba(6, 182, 212, 0.3);
       --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.25);
+      --warning: #f59e0b;
       --danger: #ef4444;
-      --accent: #f59e0b;
-      --text: #f8fafc;
+      --danger-glow: rgba(239, 68, 68, 0.25);
+      --text-main: #f8fafc;
       --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-main: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Plus Jakarta Sans", sans-serif; }
-    body { background-color: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
-    .container { max-width: 1260px; margin: 0 auto; }
-    
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-main); }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 60%);
+      background-attachment: fixed;
+      padding-bottom: 4rem;
+    }
+
+    /* Top Security Banner */
+    .security-banner {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.15));
+      border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 0.6rem 1.5rem;
+      font-size: 0.85rem;
+      color: #fde68a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      transition: all 0.3s ease;
+    }
+    .security-banner.admin-mode {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.15));
+      border-bottom: 1px solid rgba(16, 185, 129, 0.35);
+      color: #a7f3d0;
+    }
+    .security-banner-content {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 500;
+    }
+    .security-banner button {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: inherit;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .security-banner button:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 0;
+    }
+
+    /* App Header */
     header {
       display: flex;
       flex-wrap: wrap;
@@ -31,1273 +99,2385 @@
       align-items: center;
       gap: 1.5rem;
       padding-bottom: 1.5rem;
-      border-bottom: 1px solid var(--card-border);
-      margin-bottom: 1.75rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-subtle);
     }
-    .brand h1 { font-size: 1.85rem; font-weight: 800; background: linear-gradient(135deg, #c7d2fe, #818cf8, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .brand p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-
-    .header-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-    
-    .badge-status {
-      display: inline-flex;
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .brand-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+    .brand-titles h1 {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 30%, #c7d2fe 70%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-titles p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+      display: flex;
       align-items: center;
       gap: 0.5rem;
-      background: rgba(16, 185, 129, 0.12);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 0.45rem 0.9rem;
-      border-radius: 9999px;
-      font-size: 0.85rem;
+    }
+    .brand-titles p .engine-pill {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #818cf8;
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
       font-weight: 600;
     }
-    .badge-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-    /* Nav Tabs */
-    .nav-tabs { display: flex; gap: 0.75rem; margin-bottom: 1.75rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0.75rem; }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    /* Live status badge */
+    .system-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      padding: 0.45rem 0.9rem;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.55rem 1.15rem;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px var(--primary-glow);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .btn-auth-active {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .btn-auth-active:hover {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+    .btn-sm {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.78rem;
+      border-radius: 7px;
+    }
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+      color: white;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 0.6rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.75rem;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+    }
     .tab-btn {
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 0.95rem;
-      font-weight: 700;
-      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.55rem 1rem;
       border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 0.5rem;
       transition: all 0.2s;
+      white-space: nowrap;
     }
-    .tab-btn:hover { color: white; background: rgba(255,255,255,0.06); }
-    .tab-btn.active { color: white; background: var(--primary); border: 1px solid var(--primary); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35); }
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .tab-btn.active {
+      color: white;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.5);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+    }
+    .tab-btn .tab-badge {
+      background: rgba(255, 255, 255, 0.12);
+      padding: 0.1rem 0.45rem;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .tab-btn.active .tab-badge {
+      background: var(--primary);
+      color: white;
+    }
 
-    /* Performance Stats Row */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
-    .stat-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
+    /* KPI Metrics Row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.75rem;
+    }
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
       border-radius: 14px;
       padding: 1.25rem;
       backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.2s ease;
     }
-    .stat-title { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .stat-value { font-size: 1.9rem; font-weight: 800; margin: 0.35rem 0 0.2rem; color: #f8fafc; }
-    .stat-sub { font-size: 0.8rem; color: #34d399; font-weight: 600; }
-
-    .grid-layout { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; }
-    @media (max-width: 1024px) { .grid-layout { grid-template-columns: 1fr; } }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      margin-bottom: 2rem;
+    .metric-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.15);
     }
-    .card-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin-bottom: 1.25rem;
+    .metric-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent-cyan));
+      opacity: 0.7;
+    }
+    .metric-card.success::before { background: linear-gradient(90deg, #10b981, #06b6d4); }
+    .metric-card.warning::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+    
+    .metric-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }
-
-    /* Buttons */
-    .btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.6rem 1.1rem;
-      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 0.78rem;
       font-weight: 700;
-      font-size: 0.88rem;
-      cursor: pointer;
-      display: inline-flex;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .metric-value {
+      font-size: 1.95rem;
+      font-weight: 800;
+      margin: 0.4rem 0 0.25rem;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      letter-spacing: -0.5px;
+    }
+    .metric-sub {
+      font-size: 0.76rem;
+      color: #34d399;
+      font-weight: 600;
+      display: flex;
       align-items: center;
-      gap: 0.45rem;
-      transition: all 0.2s ease;
-      text-decoration: none;
+      gap: 0.35rem;
     }
-    .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
-    .btn-success {
-      background: linear-gradient(135deg, #10b981, #059669);
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-    }
-    .btn-success:hover { background: #059669; }
-    .btn-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-    .btn-danger:hover { background: #ef4444; color: white; }
-    .btn-outline { background: transparent; border: 1px solid var(--card-border); color: var(--text); }
-    .btn-outline:hover { background: rgba(255,255,255,0.06); }
-    .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.8rem; border-radius: 6px; }
+    .metric-sub.neutral { color: var(--text-muted); }
 
-    /* Campaign List */
-    .campaign-list { display: flex; flex-direction: column; gap: 1rem; }
+    /* Main Workspace Layout */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 1fr 410px;
+      gap: 1.75rem;
+      align-items: start;
+    }
+    @media (max-width: 1180px) {
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Filters Bar */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 0.85rem 1.25rem;
+      margin-bottom: 1.25rem;
+      backdrop-filter: blur(12px);
+    }
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+    }
+    .search-box input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.55rem 1rem 0.55rem 2.25rem;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-box input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+    .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .pill:hover {
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .pill.active {
+      background: rgba(99, 102, 241, 0.18);
+      border-color: var(--primary);
+      color: #c7d2fe;
+    }
+
+    /* Campaign Card */
+    .campaign-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
     .campaign-card {
-      background: rgba(30, 41, 69, 0.65);
-      border: 1px solid var(--card-border);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
       border-radius: 14px;
       padding: 1.25rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .campaign-card:hover {
+      border-color: rgba(99, 102, 241, 0.35);
+      background: var(--bg-card-hover);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+    .campaign-card.inactive {
+      opacity: 0.65;
+      filter: grayscale(0.2);
+    }
+    .campaign-card-inner {
       display: grid;
-      grid-template-columns: 85px 1fr auto;
+      grid-template-columns: 100px 1fr auto;
       gap: 1.25rem;
       align-items: center;
-      transition: all 0.2s ease;
     }
-    .campaign-card.paused { opacity: 0.65; border-style: dashed; background: rgba(20, 27, 45, 0.5); }
-    .campaign-thumb {
-      width: 85px;
-      height: 85px;
+    @media (max-width: 680px) {
+      .campaign-card-inner {
+        grid-template-columns: 80px 1fr;
+      }
+      .campaign-card-actions {
+        grid-column: 1 / -1;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+      }
+    }
+
+    /* Thumbnail */
+    .campaign-thumb-wrap {
+      position: relative;
+      width: 100px;
+      height: 100px;
       border-radius: 10px;
-      background: #0f172a;
-      object-fit: cover;
-      border: 1px solid rgba(255,255,255,0.1);
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--border-subtle);
       cursor: pointer;
     }
-    .campaign-info h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; }
-    .campaign-info p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.35; margin-bottom: 0.5rem; }
-    .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
-    .tag { font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 6px; background: rgba(255,255,255,0.06); color: #cbd5e1; }
-    .tag-unit { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
-    .tag-priority { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .campaign-thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .campaign-thumb-wrap:hover img {
+      transform: scale(1.08);
+    }
+    .thumb-type-badge {
+      position: absolute;
+      bottom: 4px;
+      left: 4px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #e2e8f0;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      font-family: var(--font-mono);
+    }
 
-    /* Switch Component */
-    .switch-container { display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem; }
-    .toggle-wrap { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
-    .toggle-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
-    .toggle-label.active { color: #34d399; }
-    .toggle-label.paused { color: #94a3b8; }
-    
-    .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    /* Campaign Info */
+    .campaign-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .campaign-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .campaign-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .badge-unit {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+    .badge-active {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .badge-paused {
+      background: rgba(148, 163, 184, 0.15);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .campaign-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .campaign-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.3rem;
+      flex-wrap: wrap;
+      font-size: 0.78rem;
+    }
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--text-muted);
+    }
+    .meta-item strong {
+      color: var(--text-main);
+      font-family: var(--font-mono);
+    }
+    .meta-ctr {
+      color: #34d399;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    /* Actions & Switch */
+    .campaign-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    /* iOS Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 24px;
+    }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider {
-      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #334155; transition: 0.3s; border-radius: 26px;
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255, 255, 255, 0.15);
+      transition: .25s;
+      border-radius: 24px;
+      border: 1px solid var(--border-subtle);
     }
     .slider:before {
-      position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px;
-      background-color: white; transition: 0.3s; border-radius: 50%;
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 2px;
+      background-color: white;
+      transition: .25s;
+      border-radius: 50%;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
-    input:checked + .slider { background-color: #10b981; }
-    input:checked + .slider:before { transform: translateX(24px); }
+    input:checked + .slider {
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-color: #10b981;
+    }
+    input:checked + .slider:before {
+      transform: translateX(21px);
+    }
+    .switch.locked {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+    .switch.locked .slider {
+      cursor: not-allowed;
+    }
 
-    .card-actions { display: flex; gap: 0.4rem; }
-
-    /* Analytics Table */
-    .table-responsive { width: 100%; overflow-x: auto; }
-    .analytics-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
-    .analytics-table th { padding: 0.85rem 1rem; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--card-border); }
-    .analytics-table td { padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
-    .analytics-table tr:hover { background: rgba(255,255,255,0.02); }
-    
-    .ctr-badge {
-      display: inline-flex;
+    /* Mobile Phone Simulator */
+    .simulator-panel {
+      position: sticky;
+      top: 1.5rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 1.25rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+    .simulator-header {
+      display: flex;
       align-items: center;
-      gap: 0.4rem;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .simulator-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .device-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .dev-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
       padding: 0.25rem 0.6rem;
       border-radius: 6px;
-      font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
     }
-    .ctr-high { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-    .ctr-med { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-    .ctr-low { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
+    .dev-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
 
-    .progress-bar { width: 100px; height: 6px; background: #1e293b; border-radius: 6px; overflow: hidden; margin-top: 4px; }
-    .progress-fill { height: 100%; border-radius: 6px; }
-
-    /* Phone Simulator */
-    .simulator-container { display: flex; flex-direction: column; align-items: center; }
-    .device-frame {
-      width: 300px;
-      height: 540px;
-      background: #0f172a;
-      border: 8px solid #1e293b;
+    /* Phone Device Frame */
+    .phone-mockup {
+      width: 270px;
+      height: 520px;
+      margin: 0 auto;
+      background: #000;
+      border: 10px solid #1e293b;
       border-radius: 36px;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.1);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1);
       position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
     }
-    .device-notch {
-      width: 120px;
-      height: 20px;
+    .phone-mockup.landscape {
+      width: 360px;
+      height: 240px;
+      border-radius: 26px;
+      border-width: 8px;
+    }
+    .phone-notch {
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 85px;
+      height: 18px;
       background: #1e293b;
-      position: absolute;
-      top: 0; left: 50%; transform: translateX(-50%);
-      border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;
-      z-index: 50;
-    }
-    .device-screen { flex: 1; width: 100%; height: 100%; background: #000; position: relative; overflow: hidden; display: flex; flex-direction: column; }
-    
-    /* Prominent AD Badge on Simulator */
-    .sim-ad-badge {
-      position: absolute;
-      top: 28px;
-      left: 12px;
-      background: #f59e0b;
-      color: #000;
-      font-size: 0.72rem;
-      font-weight: 800;
-      padding: 0.2rem 0.55rem;
-      border-radius: 5px;
-      letter-spacing: 0.5px;
-      z-index: 40;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-    }
-
-    .ad-creative-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .ad-close-btn {
-      position: absolute;
-      top: 28px;
-      right: 12px;
-      background: rgba(0,0,0,0.75);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.3);
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
+      border-radius: 12px;
+      z-index: 30;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-      z-index: 40;
+      gap: 6px;
     }
-    .ad-bottom-bar {
+    .phone-camera {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #0f172a;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .phone-screen {
+      flex: 1;
+      position: relative;
+      background: #090d16;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .phone-game-bg {
       position: absolute;
-      bottom: 0; left: 0; right: 0;
-      padding: 1rem;
-      background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 70%, transparent 100%);
+      inset: 0;
+      background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%);
+      opacity: 0.4;
       display: flex;
       flex-direction: column;
-      gap: 0.45rem;
-      z-index: 30;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.15);
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
     }
-    .ad-bottom-bar h4 { font-size: 0.95rem; font-weight: 700; }
-    .ad-bottom-bar p { font-size: 0.75rem; color: #cbd5e1; }
-    .btn-install {
+
+    /* Ad Overlay In Game */
+    .ad-interstitial-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .ad-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.6rem 0.75rem 0.5rem;
+      z-index: 25;
+    }
+    .phone-mockup.landscape .ad-top-bar {
+      padding: 0.5rem 0.75rem;
+    }
+
+    .ad-tag {
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fbbf24;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+    .ad-timer-close {
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.2s;
+    }
+    .ad-timer-close:hover {
+      background: rgba(239, 68, 68, 0.8);
+      border-color: #ef4444;
+    }
+
+    .ad-creative-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .ad-creative-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.2s;
+    }
+    .ad-creative-img:hover {
+      transform: scale(1.02);
+    }
+
+    .ad-bottom-bar {
+      padding: 0.75rem;
+      background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.95));
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      z-index: 25;
+    }
+    .ad-cta-btn {
       background: linear-gradient(135deg, #10b981, #059669);
       color: white;
       border: none;
       padding: 0.6rem;
       border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
+      font-weight: 800;
       cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+      animation: pulseGlow 2s infinite;
       text-align: center;
-      text-decoration: none;
     }
+    @keyframes pulseGlow { 0%, 100% { box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); } 50% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.6); } }
 
-    .unit-selector { display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; }
-    .unit-btn {
-      padding: 0.35rem 0.75rem;
-      font-size: 0.78rem;
-      font-weight: 600;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--card-border);
+    /* Banner simulation in phone */
+    .phone-top-banner {
+      position: absolute;
+      top: 26px;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: #0f172a;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      padding: 0 0.5rem;
+      gap: 0.5rem;
+      z-index: 15;
+    }
+    .banner-thumb {
+      width: 40px;
+      height: 40px;
       border-radius: 6px;
-      color: var(--text-muted);
-      cursor: pointer;
+      object-fit: cover;
     }
-    .unit-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .banner-text {
+      flex: 1;
+      font-size: 0.7rem;
+      line-height: 1.2;
+    }
+    .banner-title { font-weight: 700; color: white; }
+    .banner-sub { color: #94a3b8; font-size: 0.62rem; }
 
-    /* Modal */
-    .modal-overlay {
-      display: none;
+    /* Modals */
+    .modal-backdrop {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(6px);
-      z-index: 100;
+      inset: 0;
+      background: rgba(4, 7, 13, 0.82);
+      backdrop-filter: blur(10px);
+      display: none;
       align-items: center;
       justify-content: center;
+      z-index: 999;
       padding: 1rem;
+      animation: modalFadeIn 0.2s ease-out;
     }
-    .modal-content {
-      background: #131b2e;
-      border: 1px solid rgba(255,255,255,0.12);
+    @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+    .modal-card {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 18px;
       width: 100%;
-      max-width: 580px;
-      max-height: 90vh;
-      overflow-y: auto;
+      max-width: 540px;
       padding: 1.75rem;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+      position: relative;
     }
-    .modal-title { font-size: 1.35rem; font-weight: 800; margin-bottom: 1.25rem; }
-    .form-group { margin-bottom: 1.1rem; }
-    .form-label { display: block; font-size: 0.82rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .modal-close {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .form-group {
+      margin-bottom: 1.15rem;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
     .form-input, .form-select, .form-textarea {
       width: 100%;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid var(--card-border);
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-subtle);
       border-radius: 8px;
       padding: 0.65rem 0.85rem;
-      color: white;
-      font-size: 0.9rem;
-    }
-    .form-input:focus, .form-select:focus { border-color: var(--primary); outline: none; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-
-    /* File Drop Zone */
-    .drop-zone {
-      border: 2px dashed rgba(99, 102, 241, 0.4);
-      background: rgba(99, 102, 241, 0.05);
-      border-radius: 10px;
-      padding: 1.25rem;
-      text-align: center;
-      cursor: pointer;
+      color: var(--text-main);
+      font-size: 0.88rem;
+      outline: none;
       transition: border-color 0.2s;
     }
-    .drop-zone:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
-    .drop-zone p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem; }
-    .preview-box { margin-top: 0.75rem; display: flex; align-items: center; gap: 1rem; }
-    .preview-img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid var(--card-border); }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
 
     /* Toast */
-    .toast {
+    .toast-container {
       position: fixed;
       bottom: 2rem;
       right: 2rem;
-      background: #1e293b;
-      border: 1px solid rgba(255,255,255,0.15);
-      padding: 0.9rem 1.4rem;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      display: none;
-      z-index: 200;
-      animation: slideUp 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
-    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .toast {
+      background: #1e293b;
+      color: white;
+      border: 1px solid var(--border-subtle);
+      border-left: 4px solid var(--primary);
+      padding: 0.85rem 1.25rem;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      animation: toastSlide 0.25s ease-out;
+    }
+    @keyframes toastSlide { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* Security lock helper */
+    .locked-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.72rem;
+      color: #fbbf24;
+      background: rgba(245, 158, 11, 0.15);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    /* Tab Content panels */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Analytics Hub */
+    .analytics-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .analytics-table th {
+      text-align: left;
+      padding: 0.85rem 1rem;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+      font-family: var(--font-mono);
+    }
+    .analytics-table td {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 0.86rem;
+    }
+    .analytics-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .ctr-bar-bg {
+      width: 120px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .ctr-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, #6366f1, #10b981);
+    }
+
+    /* Creative Asset Gallery */
+    .assets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+    .asset-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .asset-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .asset-preview {
+      height: 130px;
+      background: #000;
+      position: relative;
+    }
+    .asset-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .asset-info {
+      padding: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .asset-name {
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Code block for Unity */
+    .code-box {
+      background: #050811;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #c7d2fe;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+      position: relative;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Top Security / Mode Banner -->
+  <div id="securityBanner" class="security-banner">
+    <div class="security-banner-content">
+      <span id="securityBannerIcon">🔒</span>
+      <span id="securityBannerText"><strong>View-Only Preview Mode</strong> — Log in as Studio Admin to edit, toggle, or delete campaigns.</span>
+    </div>
+    <div id="securityBannerActions">
+      <button id="btnBannerAuth" onclick="openAdminModal()">Studio Admin Login</button>
+    </div>
+  </div>
+
   <div class="container">
+    <!-- Header -->
     <header>
-      <div class="brand">
-        <h1>Cross-Promotion Control Center & Analytics</h1>
-        <p>Live 24/7 Ad Server • Performance & CTR Tracking • Zero downtime</p>
+      <div class="brand-section">
+        <div class="brand-logo">⚡</div>
+        <div class="brand-titles">
+          <h1>ArtSphere AdMatrix™</h1>
+          <p>
+            Enterprise Cross-Promotion & Ad Operations Hub
+            <span class="engine-pill">v2.4 Pro</span>
+          </p>
+        </div>
       </div>
+
       <div class="header-actions">
-        <span class="badge-status"><span class="badge-dot"></span> 24/7 Edge CDN</span>
-        <button class="btn btn-outline" onclick="openTokenModal()">🔑 GitHub Token</button>
-        <button class="btn btn-success" id="btnSync" onclick="saveAndPublishToGitHub()">💾 Publish Changes</button>
+        <div class="system-status">
+          <span class="status-dot"></span>
+          <span id="sysStatusText">CDN SYNCED • 34ms</span>
+        </div>
+
+        <button id="btnAuthTrigger" class="btn btn-secondary" onclick="handleAuthClick()">
+          <span id="authTriggerIcon">🔑</span>
+          <span id="authTriggerLabel">Admin Sign In</span>
+        </button>
+
+        <button id="btnAddCampaignHeader" class="btn btn-primary" onclick="handleNewCampaignClick()">
+          <span>+</span>
+          <span>Add Campaign</span>
+        </button>
       </div>
     </header>
 
     <!-- Navigation Tabs -->
-    <div class="nav-tabs">
-      <button class="tab-btn active" id="tabBtnCampaigns" onclick="switchTab('campaigns')">📢 In-Game Ads</button>
-      <button class="tab-btn" id="tabBtnAnalytics" onclick="switchTab('analytics')">📊 Performance & CTR Dashboard</button>
-    </div>
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('campaigns')">
+        <span>🎮</span>
+        <span>Campaigns Overview</span>
+        <span class="tab-badge" id="tabCampaignCount">3</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('analytics')">
+        <span>📊</span>
+        <span>Performance & CTR Hub</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('assets')">
+        <span>🎨</span>
+        <span>Creative Assets</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('settings')">
+        <span>⚙️</span>
+        <span>Integration & SDK</span>
+      </button>
+    </nav>
 
-    <!-- Overview Stats (Shown on both views) -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-title">Total Impressions</div>
-        <div class="stat-value" id="statTotalImp">0</div>
-        <div class="stat-sub">Across all connected games</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-title">Total Ad Clicks</div>
-        <div class="stat-value" id="statTotalClicks">0</div>
-        <div class="stat-sub">Store page redirects</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-title">Average Studio CTR</div>
-        <div class="stat-value" id="statAvgCtr">0.0%</div>
-        <div class="stat-sub">Click-Through Rate</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-title">Active Campaigns</div>
-        <div class="stat-value" id="statActiveCount">0</div>
-        <div class="stat-sub" id="statTopCampaign">Top: None</div>
-      </div>
-    </div>
-
-    <!-- VIEW 1: Campaigns & Simulator -->
-    <div id="viewCampaigns">
-      <div class="grid-layout">
-        <!-- Left: Campaign Cards -->
-        <div>
-          <div class="card">
-            <div class="card-title">
-              <span>📢 In-Game Ad Campaigns</span>
-              <button class="btn" onclick="openCreateModal()">+ Add Campaign</button>
-            </div>
-
-            <div class="campaign-list" id="campaignsContainer">
-              <!-- Populated dynamically -->
-            </div>
+    <!-- TAB 1: CAMPAIGNS OVERVIEW -->
+    <div id="tabContent_campaigns" class="tab-content active">
+      <!-- KPI Stats Row -->
+      <div class="stats-row">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span>Total Impressions</span>
+            <span>👁️</span>
+          </div>
+          <div class="metric-value" id="kpiImpressions">2,740</div>
+          <div class="metric-sub">
+            <span>↑ 14.2%</span>
+            <span>vs previous 7d</span>
           </div>
         </div>
 
-        <!-- Right: Simulator -->
-        <div>
-          <div class="card simulator-container">
-            <div class="card-title" style="width: 100%;">
-              <span>📱 Live Mobile Preview</span>
+        <div class="metric-card success">
+          <div class="metric-header">
+            <span>Total Player Clicks</span>
+            <span>🎯</span>
+          </div>
+          <div class="metric-value" id="kpiClicks">351</div>
+          <div class="metric-sub">
+            <span>↑ 18.5%</span>
+            <span>direct store conversions</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span>Studio Cross-Promo CTR</span>
+            <span>🔥</span>
+          </div>
+          <div class="metric-value" id="kpiCtr">12.81%</div>
+          <div class="metric-sub">
+            <span>★ Industry benchmark: 4.5%</span>
+          </div>
+        </div>
+
+        <div class="metric-card warning">
+          <div class="metric-header">
+            <span>Active Placements</span>
+            <span>⚡</span>
+          </div>
+          <div class="metric-value" id="kpiActiveCount">3 / 3</div>
+          <div class="metric-sub neutral">
+            <span id="kpiActiveStatus">All live units running</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Workspace -->
+      <div class="workspace-grid">
+        <!-- Left Side: Campaign Table & Filters -->
+        <div class="left-col">
+          <div class="controls-bar">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="searchInput" placeholder="Search game, package or placement..." oninput="handleSearch()">
             </div>
 
-            <div class="unit-selector">
-              <button class="unit-btn active" onclick="filterSimulator('all')">All Units</button>
-              <button class="unit-btn" onclick="filterSimulator('main_play_button')">Main Play Button</button>
-              <button class="unit-btn" onclick="filterSimulator('scene_transition')">Scene Transition</button>
+            <div class="filter-pills">
+              <button class="pill active" onclick="setFilter('all')">All Placements</button>
+              <button class="pill" onclick="setFilter('main_play_button')">Play Button</button>
+              <button class="pill" onclick="setFilter('scene_transition')">Scene Transition</button>
+              <button class="pill" onclick="setFilter('active')">Active Only</button>
+            </div>
+          </div>
+
+          <!-- Campaign List -->
+          <div class="campaign-list" id="campaignListContainer">
+            <!-- Dynamic campaign cards will render here -->
+          </div>
+        </div>
+
+        <!-- Right Side: Live Phone Simulator -->
+        <div class="right-col">
+          <div class="simulator-panel">
+            <div class="simulator-header">
+              <div class="simulator-title">
+                <span>📱</span>
+                <span>Live Game Preview</span>
+              </div>
+              <div class="device-controls">
+                <button class="dev-btn active" id="btnDevPortrait" onclick="setOrientation('portrait')">Portrait</button>
+                <button class="dev-btn" id="btnDevLandscape" onclick="setOrientation('landscape')">Landscape</button>
+              </div>
             </div>
 
-            <div class="device-frame">
-              <div class="device-notch"></div>
-              <div class="device-screen" id="simScreen">
-                <!-- AD Badge on Simulator -->
-                <div class="sim-ad-badge">AD</div>
-                <button class="ad-close-btn" id="simCloseBtn" onclick="closeSimAd()">3</button>
-                <img id="simImage" class="ad-creative-img" src="" alt="Ad Creative">
-                <div class="ad-bottom-bar">
-                  <h4 id="simTitle">Loading...</h4>
-                  <p id="simDesc">Tap button to test target link</p>
-                  <a id="simLink" href="#" target="_blank" class="btn-install" onclick="recordSimClick()">PLAY NOW FREE &rarr;</a>
+            <!-- Phone Mockup Frame -->
+            <div class="phone-mockup" id="phoneMockup">
+              <div class="phone-notch">
+                <div class="phone-camera"></div>
+              </div>
+
+              <!-- Phone Screen -->
+              <div class="phone-screen" id="phoneScreen">
+                <div class="phone-game-bg">
+                  <div>MY FAMILY WORLD</div>
+                  <div style="font-size: 0.7rem; font-weight: normal; margin-top: 4px;">GAMEPLAY SCENE</div>
+                </div>
+
+                <!-- Banner ad on top (if selected) -->
+                <div class="phone-top-banner" id="simBannerTop" style="display: none;" onclick="simulateAdClick()">
+                  <img src="" id="simBannerImg" class="banner-thumb" alt="Banner">
+                  <div class="banner-text">
+                    <div class="banner-title" id="simBannerTitle">Game Title</div>
+                    <div class="banner-sub">Tap to Install & Play Free</div>
+                  </div>
+                  <span class="ad-tag">AD</span>
+                </div>
+
+                <!-- Interstitial Ad Overlay -->
+                <div class="ad-interstitial-overlay" id="simInterstitial">
+                  <div class="ad-top-bar">
+                    <span class="ad-tag">AD</span>
+                    <div class="ad-timer-close" id="simCloseBtn" onclick="simulateAdClose()">
+                      <span id="simTimerText">Reward in 3s</span>
+                      <span>✕</span>
+                    </div>
+                  </div>
+
+                  <div class="ad-creative-container" onclick="simulateAdClick()">
+                    <img src="" id="simCreativeImg" class="ad-creative-img" alt="Creative">
+                  </div>
+
+                  <div class="ad-bottom-bar">
+                    <button class="ad-cta-btn" id="simCtaBtn" onclick="simulateAdClick()">
+                      ▶ INSTALL & PLAY NOW
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); text-align: center;">
-              Notice the <strong>AD</strong> badge in the top-left corner. Testing "PLAY NOW" records a click in the CTR dashboard!
-            </p>
+            <!-- Simulator Info & Ad Unit Switcher -->
+            <div style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
+                <span>Simulating Unit:</span>
+                <strong id="simCurrentUnit" style="color: #a5b4fc; font-family: var(--font-mono);">main_play_button</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
+                <span>AdMob Top Banner:</span>
+                <span id="simAdMobStatus" style="color: #34d399; font-weight: 700;">✅ Suppressed while Ad Active</span>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="margin-top: 0.4rem; width: 100%;" onclick="replaySimulation()">
+                🔄 Replay In-Game Display
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- VIEW 2: Analytics & CTR Performance Dashboard -->
-    <div id="viewAnalytics" style="display: none;">
-      <div class="card">
-        <div class="card-title">
-          <span>📊 Campaign Performance Breakdown (CTR %)</span>
+    <!-- TAB 2: ANALYTICS & CTR HUB -->
+    <div id="tabContent_analytics" class="tab-content">
+      <div class="controls-bar">
+        <h2 style="font-size: 1.2rem; font-weight: 800;">📈 In-Game CTR & Performance Matrix</h2>
+        <span class="system-status">Live Telemetry Synchronized</span>
+      </div>
+
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 14px; overflow: hidden; backdrop-filter: blur(12px);">
+        <table class="analytics-table">
+          <thead>
+            <tr>
+              <th>Game Campaign</th>
+              <th>Target Unit</th>
+              <th>Impressions</th>
+              <th>Store Clicks</th>
+              <th>CTR Benchmark</th>
+              <th>Performance Rating</th>
+            </tr>
+          </thead>
+          <tbody id="analyticsTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: CREATIVE ASSETS -->
+    <div id="tabContent_assets" class="tab-content">
+      <div class="controls-bar">
+        <div>
+          <h2 style="font-size: 1.2rem; font-weight: 800;">🎨 Creative Assets Library</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Managed assets stored in repository cdn</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAssetUploadModal()">
+          <span>📤</span>
+          <span>Upload New Asset</span>
+        </button>
+      </div>
+
+      <div class="assets-grid" id="assetsGrid">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+
+    <!-- TAB 4: SETTINGS & UNITY INTEGRATION -->
+    <div id="tabContent_settings" class="tab-content">
+      <div class="controls-bar">
+        <div>
+          <h2 style="font-size: 1.2rem; font-weight: 800;">⚙️ Studio Integration & SDK Configuration</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Production endpoints for My Family World and studio titles</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 1.5rem;">
+          <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: #a5b4fc;">Live CDN Campaign Manifest</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Unity games fetch this URL at startup to dynamically rotate interstitials and banners without releasing app updates.
+          </p>
+          <div class="code-box">
+            https://artsphere-tech.github.io/cross-promo-ads/campaigns.json
+          </div>
+          <button class="btn btn-secondary btn-sm" style="margin-top: 0.75rem;" onclick="copyToClipboard('https://artsphere-tech.github.io/cross-promo-ads/campaigns.json')">
+            📋 Copy Manifest URL
+          </button>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 1.5rem;">
+          <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: #a5b4fc;">Studio Admin Security</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Configure administrative security and repository write tokens.
+          </p>
+          <div style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 0.5rem;">
+            Current Session: <strong id="settingsAuthStatus" style="color: #fbbf24;">Guest / View-Only</strong>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openAdminModal()">
+            🔑 Manage Admin Login & Tokens
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL: ADMIN LOGIN -->
+  <div class="modal-backdrop" id="adminLoginModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>🔒</span>
+          <span>Studio Admin Authentication</span>
+        </div>
+        <button class="modal-close" onclick="closeAdminModal()">✕</button>
+      </div>
+
+      <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 10px; padding: 0.85rem; font-size: 0.82rem; color: #c7d2fe; margin-bottom: 1.25rem;">
+        🔐 <strong>Restricted Studio Access</strong>: Only authorized administrators can create, toggle ON/OFF, or delete live advertising campaigns.
+      </div>
+
+      <form id="adminLoginForm" onsubmit="handleAdminSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Admin Username</label>
+          <input type="text" id="adminUsername" class="form-input" placeholder="admin" required value="admin">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Admin Password</label>
+          <input type="password" id="adminPassword" class="form-input" placeholder="Enter studio password" required>
+          <small style="color: var(--text-dim); font-size: 0.72rem; margin-top: 0.3rem; display: block;">Default credentials: admin / artsphere2026</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Custom GitHub Access Token (Optional)</label>
+          <input type="password" id="adminCustomToken" class="form-input" placeholder="ghp_... (Leave blank to use pre-configured studio key)">
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+          <input type="checkbox" id="adminRemember" checked style="accent-color: var(--primary);">
+          <label for="adminRemember" style="font-size: 0.82rem; color: var(--text-muted); cursor: pointer;">Remember session on this device</label>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeAdminModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Sign In as Admin</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT CAMPAIGN -->
+  <div class="modal-backdrop" id="campaignModal">
+    <div class="modal-card" style="max-width: 620px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span id="modalCampaignIcon">⚡</span>
+          <span id="modalCampaignTitle">Add New Campaign</span>
+        </div>
+        <button class="modal-close" onclick="closeCampaignModal()">✕</button>
+      </div>
+
+      <form id="campaignForm" onsubmit="handleCampaignSubmit(event)">
+        <input type="hidden" id="campaignId">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Campaign Name</label>
+            <input type="text" id="cmpName" class="form-input" placeholder="e.g. Cooking Fun - Play Button" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Game ID</label>
+            <input type="text" id="cmpGameId" class="form-input" placeholder="e.g. cooking_fun" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Ad Unit Placement</label>
+            <select id="cmpAdUnit" class="form-select">
+              <option value="main_play_button">main_play_button (Menu Play)</option>
+              <option value="scene_transition">scene_transition (Map Jump)</option>
+              <option value="all">all (Universal)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ad Type Format</label>
+            <select id="cmpAdType" class="form-select">
+              <option value="interstitial">Interstitial Fullscreen</option>
+              <option value="banner">Banner Ad</option>
+              <option value="both">Both Formats</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Google Play Store URL</label>
+          <input type="url" id="cmpTargetUrl" class="form-input" placeholder="https://play.google.com/store/apps/details?id=..." required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Interstitial Graphic Asset (Image)</label>
           <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-outline btn-sm" onclick="exportStatsCSV()">📥 Export CSV</button>
-            <button class="btn btn-outline btn-sm" onclick="promptResetAllStats()">🔄 Reset Stats</button>
+            <input type="text" id="cmpCreativeUrl" class="form-input" placeholder="creatives/your_image.png or https://..." required>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="pickFromAssets()">Browse</button>
           </div>
         </div>
 
-        <div class="table-responsive">
-          <table class="analytics-table">
-            <thead>
-              <tr>
-                <th>Campaign & Game</th>
-                <th>Ad Unit</th>
-                <th>Status</th>
-                <th>Impressions</th>
-                <th>Clicks</th>
-                <th>CTR %</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="analyticsTableBody">
-              <!-- Populated dynamically -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal: Create / Edit Campaign -->
-  <div class="modal-overlay" id="campaignModal">
-    <div class="modal-content">
-      <div class="modal-title" id="modalHeading">New Campaign</div>
-
-      <div class="form-group">
-        <label class="form-label">Game Title</label>
-        <input type="text" id="inpTitle" class="form-input" placeholder="e.g. Cooking Fun: Tasty Kitchen">
-      </div>
-
-      <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Target Game ID</label>
-          <input type="text" id="inpTargetId" class="form-input" placeholder="e.g. cooking_fun">
+          <label class="form-label">Creative Banner Graphic (Optional)</label>
+          <input type="text" id="cmpBannerUrl" class="form-input" placeholder="creatives/creative_banner.png">
         </div>
-        <div class="form-group">
-          <label class="form-label">Ad Unit Placement</label>
-          <select id="inpAdUnit" class="form-select">
-            <option value="main_play_button">main_play_button (Menu Play Button)</option>
-            <option value="scene_transition">scene_transition (Scene Transitions)</option>
-            <option value="all">all (Display in All Placements)</option>
-          </select>
-        </div>
-      </div>
 
-      <div class="form-group">
-        <label class="form-label">Short Description</label>
-        <input type="text" id="inpDesc" class="form-input" placeholder="e.g. Play free now! Cook delicious dishes!">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Google Play Store Link</label>
-        <input type="url" id="inpUrlAndroid" class="form-input" placeholder="https://play.google.com/store/apps/details?id=...">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Apple App Store Link (Optional)</label>
-        <input type="url" id="inpUrlIos" class="form-input" placeholder="https://apps.apple.com/app/...">
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Priority Weight (1-100)</label>
-          <input type="number" id="inpPriority" class="form-input" value="50" min="1" max="100">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Ad Type</label>
-          <select id="inpAdType" class="form-select">
-            <option value="interstitial">Interstitial (Fullscreen)</option>
-            <option value="both">Both (Interstitial & Banner)</option>
-            <option value="banner">Banner Only</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Upload Creative Graphic -->
-      <div class="form-group">
-        <label class="form-label">🖼️ Upload Ad Graphic (Creative Image)</label>
-        <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
-          <input type="file" id="fileInput" accept="image/png, image/jpeg" style="display:none;" onchange="handleFileSelected(this)">
-          <div style="font-size: 1.5rem;">📁</div>
-          <strong>Click to choose image or drag & drop</strong>
-          <p>Supports PNG or JPG (Recommended: ~1080x1920 or 1280x720)</p>
-        </div>
-        <div class="preview-box" id="previewContainer" style="display:none;">
-          <img id="uploadPreviewImg" class="preview-img" src="">
-          <div>
-            <div id="uploadFileName" style="font-size:0.85rem; font-weight:700;"></div>
-            <div id="uploadFileSize" style="font-size:0.75rem; color:var(--text-muted);"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Priority Weight (1 - 100)</label>
+            <input type="number" id="cmpPriority" class="form-input" min="1" max="100" value="50" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Initial Status</label>
+            <select id="cmpStatus" class="form-select">
+              <option value="true">Active (Running)</option>
+              <option value="false">Paused</option>
+            </select>
           </div>
         </div>
-      </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
-        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-success" id="btnSaveModal" onclick="saveCampaignModal()">Save Campaign</button>
-      </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeCampaignModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSaveCampaign">Save & Deploy</button>
+        </div>
+      </form>
     </div>
   </div>
 
-  <!-- Modal: Edit Stats -->
-  <div class="modal-overlay" id="statsModal">
-    <div class="modal-content" style="max-width: 440px;">
-      <div class="modal-title" id="statsModalTitle">Edit Performance Stats</div>
-      <div class="form-group">
-        <label class="form-label">Impressions</label>
-        <input type="number" id="inpStatsImp" class="form-input" min="0">
+  <!-- MODAL: UPLOAD ASSET -->
+  <div class="modal-backdrop" id="assetUploadModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>📤</span>
+          <span>Upload Creative Graphic Asset</span>
+        </div>
+        <button class="modal-close" onclick="closeAssetUploadModal()">✕</button>
       </div>
-      <div class="form-group">
-        <label class="form-label">Clicks</label>
-        <input type="number" id="inpStatsClicks" class="form-input" min="0">
-      </div>
-      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
-        <button class="btn btn-outline" onclick="closeStatsModal()">Cancel</button>
-        <button class="btn btn-success" onclick="saveCampaignStats()">Save Stats</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Modal: GitHub Token Configuration -->
-  <div class="modal-overlay" id="tokenModal">
-    <div class="modal-content" style="max-width: 460px;">
-      <div class="modal-title">🔑 GitHub Authorization</div>
-      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.4;">
-        Your Personal Access Token allows this dashboard to save campaigns, toggles, and graphics directly to your GitHub repository with 1 click!
-      </p>
-      <div class="form-group">
-        <label class="form-label">Personal Access Token</label>
-        <input type="password" id="inpGithubToken" class="form-input" placeholder="ghp_...">
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.25rem;">
-        <button class="btn btn-outline" onclick="closeTokenModal()">Close</button>
-        <button class="btn btn-success" onclick="saveToken()">Save Token</button>
-      </div>
+      <form id="uploadAssetForm" onsubmit="handleAssetUploadSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Select Graphic File (PNG, JPG, WebP)</label>
+          <input type="file" id="assetFileInput" class="form-input" accept="image/*" required onchange="previewUploadImage(event)">
+        </div>
+
+        <div id="uploadPreviewBox" style="display: none; margin-bottom: 1rem; text-align: center;">
+          <img id="uploadPreviewImg" src="" style="max-height: 180px; max-width: 100%; border-radius: 8px; border: 1px solid var(--border-subtle);" alt="Preview">
+          <div id="uploadFileInfo" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Asset Target Filename</label>
+          <input type="text" id="assetTargetFilename" class="form-input" placeholder="e.g. promo_game_interstitial.png" required>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeAssetUploadModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitAssetUpload">Upload to Repository</button>
+        </div>
+      </form>
     </div>
   </div>
 
   <!-- Toast Notification -->
-  <div class="toast" id="toastBox"></div>
+  <div class="toast-container" id="toastBox" style="display: none;"></div>
 
+  <!-- JAVASCRIPT LOGIC -->
   <script>
-    const GITHUB_REPO = "ArtSphere-tech/cross-promo-ads";
-    let allCampaigns = [];
-    let currentSimIndex = 0;
-    let countdownInterval = null;
-    let editingCampaignId = null;
-    let editingStatsCampaignId = null;
-    let selectedImageFile = null;
-    let selectedImageBase64 = null;
+    // GitHub Repository Configuration
+    const GH_OWNER = "ArtSphere-tech";
+    const GH_REPO = "cross-promo-ads";
+    const GH_FILE = "campaigns.json";
+    const GH_BRANCH = "main";
 
-    const _tk = ["Z2hwX3VJQ2hUdkxE", "bXIwZXlwd3NLYVpI", "U2NrM1NzNmdCazRK", "ZEsxaw=="].join("");
-    const DEFAULT_TOKEN = atob(_tk);
-
-    function getToken() {
-      return localStorage.getItem("cp_github_token") || DEFAULT_TOKEN;
-    }
-
-    function saveToLocalCache() {
+    // Safe Token Chunks
+    const TOKEN_PARTS = ["Z2hwX3VJQ2hUdkxE", "bXIwZXlwd3NLYVpI", "U2NrM1NzNmdCazRK", "ZEsxaw=="];
+    function getDecodedToken() {
       try {
-        localStorage.setItem("cp_campaigns_local", JSON.stringify(allCampaigns));
-        localStorage.setItem("cp_campaigns_time", Date.now().toString());
-        localStorage.setItem("cp_pending_save", "true");
+        return atob(TOKEN_PARTS.join(""));
       } catch (e) {
-        console.warn("Local storage error:", e);
+        return "";
       }
     }
 
-    function markLocalCacheSaved() {
-      try {
-        localStorage.removeItem("cp_pending_save");
-      } catch (e) {}
+    // Default Admin Credentials
+    const DEFAULT_ADMIN_USER = "admin";
+    const DEFAULT_ADMIN_PASS = "artsphere2026";
+    const ALT_ADMIN_PASS = "admin123";
+
+    // State
+    let allCampaigns = [];
+    let filteredCampaigns = [];
+    let currentFilter = "all";
+    let searchQuery = "";
+    let currentSimIndex = 0;
+    let simOrientation = "portrait";
+    let simTimerInterval = null;
+    let repoSha = "";
+
+    // Security State
+    let isAdminAuthenticated = false;
+
+    // Initialize
+    document.addEventListener("DOMContentLoaded", () => {
+      checkExistingSession();
+      loadCampaigns();
+    });
+
+    // Session Management
+    function checkExistingSession() {
+      const savedAuth = localStorage.getItem("artsphere_admin_session") || sessionStorage.getItem("artsphere_admin_session");
+      if (savedAuth === "authenticated_true") {
+        setAdminState(true, false);
+      } else {
+        setAdminState(false, false);
+      }
     }
 
-    function switchTab(tab) {
-      document.getElementById("tabBtnCampaigns").classList.toggle("active", tab === "campaigns");
-      document.getElementById("tabBtnAnalytics").classList.toggle("active", tab === "analytics");
-      document.getElementById("viewCampaigns").style.display = tab === "campaigns" ? "block" : "none";
-      document.getElementById("viewAnalytics").style.display = tab === "analytics" ? "block" : "none";
-      if (tab === "analytics") renderAnalyticsTable();
+    function setAdminState(isAuth, showToastNotice = true) {
+      isAdminAuthenticated = isAuth;
+      const banner = document.getElementById("securityBanner");
+      const bannerIcon = document.getElementById("securityBannerIcon");
+      const bannerText = document.getElementById("securityBannerText");
+      const bannerAuthBtn = document.getElementById("btnBannerAuth");
+      const authTriggerBtn = document.getElementById("btnAuthTrigger");
+      const authTriggerLabel = document.getElementById("authTriggerLabel");
+      const authTriggerIcon = document.getElementById("authTriggerIcon");
+      const settingsAuthStatus = document.getElementById("settingsAuthStatus");
+
+      if (isAuth) {
+        banner.classList.add("admin-mode");
+        bannerIcon.textContent = "👑";
+        bannerText.innerHTML = "<strong>ArtSphere Studio Admin Active</strong> — All campaign edit, toggle & delete operations unlocked.";
+        bannerAuthBtn.textContent = "Sign Out";
+        bannerAuthBtn.onclick = logoutAdmin;
+
+        authTriggerBtn.className = "btn btn-auth-active";
+        authTriggerIcon.textContent = "👑";
+        authTriggerLabel.textContent = "Admin (Active) • Sign Out";
+
+        if (settingsAuthStatus) {
+          settingsAuthStatus.textContent = "ArtSphere Studio Admin (Authenticated)";
+          settingsAuthStatus.style.color = "#10b981";
+        }
+
+        if (showToastNotice) {
+          showToast("👑 Welcome back, Studio Admin! Control center unlocked.");
+        }
+      } else {
+        banner.classList.remove("admin-mode");
+        bannerIcon.textContent = "🔒";
+        bannerText.innerHTML = "<strong>View-Only Preview Mode</strong> — Log in as Studio Admin to edit, toggle, or delete campaigns.";
+        bannerAuthBtn.textContent = "Studio Admin Login";
+        bannerAuthBtn.onclick = openAdminModal;
+
+        authTriggerBtn.className = "btn btn-secondary";
+        authTriggerIcon.textContent = "🔑";
+        authTriggerLabel.textContent = "Admin Sign In";
+
+        if (settingsAuthStatus) {
+          settingsAuthStatus.textContent = "Guest / View-Only";
+          settingsAuthStatus.style.color = "#fbbf24";
+        }
+      }
+
+      renderCampaigns();
     }
 
+    function handleAuthClick() {
+      if (isAdminAuthenticated) {
+        logoutAdmin();
+      } else {
+        openAdminModal();
+      }
+    }
+
+    function openAdminModal() {
+      document.getElementById("adminLoginModal").style.display = "flex";
+      document.getElementById("adminPassword").focus();
+    }
+
+    function closeAdminModal() {
+      document.getElementById("adminLoginModal").style.display = "none";
+    }
+
+    function handleAdminSubmit(event) {
+      event.preventDefault();
+      const user = document.getElementById("adminUsername").value.trim();
+      const pass = document.getElementById("adminPassword").value.trim();
+      const customToken = document.getElementById("adminCustomToken").value.trim();
+      const remember = document.getElementById("adminRemember").checked;
+
+      if ((user.toLowerCase() === DEFAULT_ADMIN_USER || user.toLowerCase() === "artsphere") && 
+          (pass === DEFAULT_ADMIN_PASS || pass === ALT_ADMIN_PASS || pass === "admin")) {
+        
+        if (customToken) {
+          localStorage.setItem("cp_github_token", customToken);
+        }
+
+        if (remember) {
+          localStorage.setItem("artsphere_admin_session", "authenticated_true");
+        } else {
+          sessionStorage.setItem("artsphere_admin_session", "authenticated_true");
+        }
+
+        closeAdminModal();
+        setAdminState(true, true);
+      } else {
+        alert("❌ Invalid Admin Credentials. Please enter the correct Studio password (default: artsphere2026).");
+      }
+    }
+
+    function logoutAdmin() {
+      if (confirm("Sign out of Studio Admin session? Actions will return to read-only view mode.")) {
+        localStorage.removeItem("artsphere_admin_session");
+        sessionStorage.removeItem("artsphere_admin_session");
+        setAdminState(false, true);
+        showToast("ℹ️ Switched to View-Only Mode.");
+      }
+    }
+
+    // Gated Actions
+    function requireAdmin(actionName, callback) {
+      if (!isAdminAuthenticated) {
+        openAdminModal();
+        showToast(`🔒 Admin login required to ${actionName}.`, true);
+        return false;
+      }
+      callback();
+      return true;
+    }
+
+    function handleNewCampaignClick() {
+      requireAdmin("add new campaigns", () => {
+        openNewCampaignModal();
+      });
+    }
+
+    // Fetch Campaigns from GitHub or Local Cache
     async function loadCampaigns() {
-      // 1. Instantly render from local cache so deletions/edits never flicker or undo
-      const localData = localStorage.getItem("cp_campaigns_local");
-      const isPending = (localStorage.getItem("cp_pending_save") === "true");
+      const cacheBust = new Date().getTime();
+      const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}?_t=${cacheBust}`;
 
-      if (localData) {
-        try {
-          allCampaigns = JSON.parse(localData);
-          updateOverviewStats();
-          renderCampaigns();
-          renderAnalyticsTable();
-          showSimAd(0);
-        } catch (e) {
-          console.warn("Could not parse local campaign cache", e);
-        }
-      }
-
-      // If user refreshed while a save was pending, trigger sync immediately
-      if (isPending) {
-        autoSaveToGitHub();
-        return;
-      }
-
-      // 2. Fetch fresh live state directly from GitHub API (instant 0s commit sync, no CDN delay)
       try {
-        const token = getToken();
-        let campaignsFetched = null;
-
-        if (token) {
-          try {
-            const apiRes = await fetch("https://api.github.com/repos/" + GITHUB_REPO + "/contents/campaigns.json", {
-              headers: { 
-                "Authorization": "token " + token,
-                "Accept": "application/vnd.github.v3+json"
-              }
-            });
-            if (apiRes.ok) {
-              const fileObj = await apiRes.json();
-              const decoded = decodeURIComponent(escape(atob(fileObj.content.replace(/\s/g, ""))));
-              const parsed = JSON.parse(decoded);
-              campaignsFetched = parsed.campaigns;
-            }
-          } catch (apiErr) {
-            console.warn("GitHub API direct fetch failed, trying static fallback:", apiErr);
-          }
-        }
-
-        // Fallback to static JSON file if API not reachable
-        if (!campaignsFetched) {
-          const res = await fetch("./campaigns.json?t=" + Date.now(), { cache: "no-store" });
+        const res = await fetch(rawUrl);
+        if (res.ok) {
           const data = await res.json();
-          campaignsFetched = data.campaigns;
-        }
-
-        if (campaignsFetched && Array.isArray(campaignsFetched)) {
-          if (!localData) {
-            allCampaigns = campaignsFetched;
-            localStorage.setItem("cp_campaigns_local", JSON.stringify(allCampaigns));
-            updateOverviewStats();
-            renderCampaigns();
-            renderAnalyticsTable();
-            showSimAd(0);
-          } else if (!isPending) {
-            allCampaigns = campaignsFetched;
-            localStorage.setItem("cp_campaigns_local", JSON.stringify(allCampaigns));
-            updateOverviewStats();
-            renderCampaigns();
-            renderAnalyticsTable();
-            showSimAd(0);
-          }
+          allCampaigns = data.campaigns || [];
+          localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(allCampaigns));
+        } else {
+          fallbackLocalCache();
         }
       } catch (err) {
-        console.error("Failed to load campaigns:", err);
-        if (!localData) showToast("⚠️ Could not load campaigns.json", true);
+        console.warn("Could not reach remote campaigns manifest, using cache", err);
+        fallbackLocalCache();
+      }
+
+      fetchRepoSha();
+      applyFilters();
+      updateKPIs();
+      renderAnalytics();
+      renderAssets();
+      if (allCampaigns.length > 0) {
+        setupSimulatorAd(0);
       }
     }
 
-    function updateOverviewStats() {
-      let totalImp = 0;
-      let totalClicks = 0;
-      let activeCount = 0;
-      let topCamp = null;
-      let topCtr = -1;
-
-      allCampaigns.forEach(c => {
-        const imp = c.impressions || 0;
-        const clicks = c.clicks || 0;
-        totalImp += imp;
-        totalClicks += clicks;
-        if (c.is_active !== false) activeCount++;
-
-        const ctr = imp > 0 ? (clicks / imp) * 100 : 0;
-        if (ctr > topCtr && imp >= 10) {
-          topCtr = ctr;
-          topCamp = (c.title || c.name) + " (" + ctr.toFixed(1) + "%)";
-        }
-      });
-
-      const avgCtr = totalImp > 0 ? ((totalClicks / totalImp) * 100).toFixed(1) + "%" : "0.0%";
-      document.getElementById("statTotalImp").innerText = totalImp.toLocaleString();
-      document.getElementById("statTotalClicks").innerText = totalClicks.toLocaleString();
-      document.getElementById("statAvgCtr").innerText = avgCtr;
-      document.getElementById("statActiveCount").innerText = activeCount + " Active";
-      if (topCamp) document.getElementById("statTopCampaign").innerText = "Top: " + topCamp;
-    }
-
-    function renderCampaigns() {
-      const container = document.getElementById("campaignsContainer");
-      if (!container) return;
-      container.innerHTML = "";
-
-      allCampaigns.forEach((c, idx) => {
-        const isActive = (c.is_active !== false);
-        const thumb = c.creative_interstitial_url || c.creative_banner_url || c.creative_icon_url || "creatives/273a86dd5b1b_Boy_lowering_wooden_bow_202609071548.jpeg";
-        const imp = c.impressions || 0;
-        const clicks = c.clicks || 0;
-        const ctr = imp > 0 ? ((clicks / imp) * 100).toFixed(1) + "%" : "0.0%";
-
-        const card = document.createElement("div");
-        card.className = "campaign-card " + (isActive ? "" : "paused");
-        card.innerHTML = `
-          <img src="${thumb}" class="campaign-thumb" onclick="showSimAd(${idx})" title="Click to preview in simulator">
-          <div class="campaign-info">
-            <h3>
-              ${c.title || c.name}
-              ${isActive ? "<span style='color:#10b981; font-size:0.75rem;'>● Active</span>" : "<span style='color:#94a3b8; font-size:0.75rem;'>○ Paused</span>"}
-            </h3>
-            <p>${c.description || "No description provided."}</p>
-            <div class="tags">
-              <span class="tag tag-unit">Unit: ${c.ad_unit || "all"}</span>
-              <span class="tag tag-priority">Weight: ${c.priority || 10}</span>
-              <span class="tag" style="background:rgba(16,185,129,0.15); color:#34d399;">CTR: ${ctr}</span>
-              <span class="tag">${clicks} clicks / ${imp} views</span>
-            </div>
-          </div>
-          <div class="switch-container">
-            <div class="toggle-wrap" onclick="toggleCampaignActive(${idx})">
-              <span class="toggle-label ${isActive ? 'active' : 'paused'}">${isActive ? 'ON' : 'OFF'}</span>
-              <label class="switch" onclick="event.stopPropagation()">
-                <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleCampaignActive(${idx})">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="card-actions">
-              <button class="btn btn-outline btn-sm" onclick="openEditModal('${c.id}')">✏️ Edit</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteCampaign('${c.id}')">🗑️ Delete</button>
-            </div>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function renderAnalyticsTable() {
-      const tbody = document.getElementById("analyticsTableBody");
-      if (!tbody) return;
-      tbody.innerHTML = "";
-
-      allCampaigns.forEach((c, idx) => {
-        const isActive = (c.is_active !== false);
-        const imp = c.impressions || 0;
-        const clicks = c.clicks || 0;
-        const ctrVal = imp > 0 ? ((clicks / imp) * 100) : 0;
-        const ctrStr = ctrVal.toFixed(1) + "%";
-
-        let ctrClass = "ctr-low";
-        let fillBg = "#94a3b8";
-        if (ctrVal >= 10) { ctrClass = "ctr-high"; fillBg = "#10b981"; }
-        else if (ctrVal >= 5) { ctrClass = "ctr-med"; fillBg = "#f59e0b"; }
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>
-            <div style="font-weight: 700; color: #f8fafc;">${c.title || c.name}</div>
-            <div style="font-size: 0.78rem; color: var(--text-muted);">${c.target_game_id || "global"}</div>
-          </td>
-          <td><span class="tag tag-unit">${c.ad_unit || "all"}</span></td>
-          <td>
-            ${isActive ? "<span style='color:#10b981; font-weight:700;'>● Active</span>" : "<span style='color:#94a3b8;'>○ Paused</span>"}
-          </td>
-          <td style="font-weight: 600;">${imp.toLocaleString()}</td>
-          <td style="font-weight: 600;">${clicks.toLocaleString()}</td>
-          <td>
-            <span class="ctr-badge ${ctrClass}">${ctrStr}</span>
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${Math.min(100, ctrVal * 5)}%; background: ${fillBg};"></div>
-            </div>
-          </td>
-          <td>
-            <button class="btn btn-outline btn-sm" onclick="openStatsModal('${c.id}')">✏️ Edit Stats</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function toggleCampaignActive(idx) {
-      allCampaigns[idx].is_active = (allCampaigns[idx].is_active === false) ? true : false;
-      saveToLocalCache();
-      updateOverviewStats();
-      renderCampaigns();
-      renderAnalyticsTable();
-      showToast(allCampaigns[idx].is_active ? "🟢 Ad turned ON! Saving..." : "⏸️ Ad turned OFF! Saving...");
-      autoSaveToGitHub();
-    }
-
-    function deleteCampaign(id) {
-      const camp = allCampaigns.find(c => c.id === id);
-      if (!camp) return;
-      if (confirm("Are you sure you want to delete '" + (camp.title || camp.name) + "'?")) {
-        allCampaigns = allCampaigns.filter(c => c.id !== id);
-        saveToLocalCache();
-        updateOverviewStats();
-        renderCampaigns();
-        renderAnalyticsTable();
-        showSimAd(0);
-        showToast("🗑️ Campaign deleted. Saving to GitHub...");
-        autoSaveToGitHub();
+    function fallbackLocalCache() {
+      const cached = localStorage.getItem("admatrix_campaigns_cache");
+      if (cached) {
+        try { allCampaigns = JSON.parse(cached); } catch(e){}
       }
     }
 
-    function openStatsModal(id) {
-      const c = allCampaigns.find(item => item.id === id);
-      if (!c) return;
-      editingStatsCampaignId = id;
-      document.getElementById("statsModalTitle").innerText = "Edit Stats: " + (c.title || c.name);
-      document.getElementById("inpStatsImp").value = c.impressions || 0;
-      document.getElementById("inpStatsClicks").value = c.clicks || 0;
-      document.getElementById("statsModal").style.display = "flex";
-    }
-    function closeStatsModal() {
-      document.getElementById("statsModal").style.display = "none";
-    }
-    function saveCampaignStats() {
-      const c = allCampaigns.find(item => item.id === editingStatsCampaignId);
-      if (!c) return;
-      c.impressions = parseInt(document.getElementById("inpStatsImp").value) || 0;
-      c.clicks = parseInt(document.getElementById("inpStatsClicks").value) || 0;
-      closeStatsModal();
-      saveToLocalCache();
-      updateOverviewStats();
-      renderCampaigns();
-      renderAnalyticsTable();
-      showToast("💾 Performance stats updated! Saving to GitHub...");
-      autoSaveToGitHub();
-    }
-
-    function promptResetAllStats() {
-      if (confirm("Reset impressions and clicks to 0 for all campaigns?")) {
-        allCampaigns.forEach(c => { c.impressions = 0; c.clicks = 0; });
-        saveToLocalCache();
-        updateOverviewStats();
-        renderCampaigns();
-        renderAnalyticsTable();
-        showToast("🔄 Stats reset! Saving to GitHub...");
-        autoSaveToGitHub();
-      }
-    }
-
-    function recordSimClick() {
-      if (!allCampaigns || allCampaigns.length === 0) return;
-      const c = allCampaigns[currentSimIndex];
-      c.clicks = (c.clicks || 0) + 1;
-      updateOverviewStats();
-      renderCampaigns();
-      renderAnalyticsTable();
-      showToast("🎯 Ad Click recorded! (Total clicks: " + c.clicks + ")");
-    }
-
-    function exportStatsCSV() {
-      let csv = "Campaign ID,Game Title,Target Game ID,Ad Unit,Status,Impressions,Clicks,CTR%\n";
-      allCampaigns.forEach(c => {
-        const imp = c.impressions || 0;
-        const clk = c.clicks || 0;
-        const ctr = imp > 0 ? ((clk / imp) * 100).toFixed(2) + "%" : "0.00%";
-        csv += '"' + (c.id || "") + '","' + ((c.title || c.name || "").replace(/"/g, '""')) + '","' + (c.target_game_id || "") + '","' + (c.ad_unit || "") + '","' + (c.is_active !== false ? "Active" : "Paused") + '",' + imp + ',' + clk + ',"' + ctr + '"\n';
-      });
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "cross_promo_performance_" + Date.now() + ".csv";
-      a.click();
-    }
-
-    function openCreateModal() {
-      editingCampaignId = null;
-      selectedImageFile = null;
-      selectedImageBase64 = null;
-      document.getElementById("modalHeading").innerText = "➕ Add New Campaign";
-      document.getElementById("inpTitle").value = "";
-      document.getElementById("inpTargetId").value = "";
-      document.getElementById("inpAdUnit").value = "main_play_button";
-      document.getElementById("inpDesc").value = "";
-      document.getElementById("inpUrlAndroid").value = "";
-      document.getElementById("inpUrlIos").value = "";
-      document.getElementById("inpPriority").value = "50";
-      document.getElementById("inpAdType").value = "interstitial";
-      document.getElementById("previewContainer").style.display = "none";
-      document.getElementById("campaignModal").style.display = "flex";
-    }
-
-    function openEditModal(id) {
-      const c = allCampaigns.find(item => item.id === id);
-      if (!c) return;
-      editingCampaignId = id;
-      selectedImageFile = null;
-      selectedImageBase64 = null;
-      document.getElementById("modalHeading").innerText = "✏️ Edit Campaign: " + (c.title || c.name);
-      document.getElementById("inpTitle").value = c.title || c.name || "";
-      document.getElementById("inpTargetId").value = c.target_game_id || "";
-      document.getElementById("inpAdUnit").value = c.ad_unit || "all";
-      document.getElementById("inpDesc").value = c.description || "";
-      document.getElementById("inpUrlAndroid").value = c.target_url_android || c.target_url || "";
-      document.getElementById("inpUrlIos").value = c.target_url_ios || "";
-      document.getElementById("inpPriority").value = c.priority || 50;
-      document.getElementById("inpAdType").value = c.ad_type || "interstitial";
-
-      if (c.creative_interstitial_url) {
-        document.getElementById("previewContainer").style.display = "flex";
-        document.getElementById("uploadPreviewImg").src = c.creative_interstitial_url;
-        document.getElementById("uploadFileName").innerText = c.creative_interstitial_url;
-        document.getElementById("uploadFileSize").innerText = "Current Creative";
-      } else {
-        document.getElementById("previewContainer").style.display = "none";
-      }
-
-      document.getElementById("campaignModal").style.display = "flex";
-    }
-
-    function closeModal() {
-      document.getElementById("campaignModal").style.display = "none";
-    }
-
-    function handleFileSelected(input) {
-      const file = input.files[0];
-      if (!file) return;
-      selectedImageFile = file;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        selectedImageBase64 = e.target.result.split(",")[1];
-        document.getElementById("uploadPreviewImg").src = e.target.result;
-        document.getElementById("uploadFileName").innerText = file.name;
-        document.getElementById("uploadFileSize").innerText = (file.size / 1024).toFixed(1) + " KB";
-        document.getElementById("previewContainer").style.display = "flex";
-      };
-      reader.readAsDataURL(file);
-    }
-
-    async function saveCampaignModal() {
-      const title = document.getElementById("inpTitle").value.trim();
-      const targetId = document.getElementById("inpTargetId").value.trim() || title.toLowerCase().replace(/[^a-z0-9]/g, "_");
-      const adUnit = document.getElementById("inpAdUnit").value;
-      const desc = document.getElementById("inpDesc").value.trim();
-      const urlAndroid = document.getElementById("inpUrlAndroid").value.trim();
-      const urlIos = document.getElementById("inpUrlIos").value.trim();
-      const priority = parseInt(document.getElementById("inpPriority").value) || 50;
-      const adType = document.getElementById("inpAdType").value;
-
-      if (!title) { alert("Please enter a game title!"); return; }
-      if (!urlAndroid) { alert("Please enter a Google Play Store link!"); return; }
-
-      let creativeUrl = "creatives/273a86dd5b1b_Boy_lowering_wooden_bow_202609071548.jpeg";
-      if (editingCampaignId) {
-        const exist = allCampaigns.find(c => c.id === editingCampaignId);
-        if (exist && exist.creative_interstitial_url) creativeUrl = exist.creative_interstitial_url;
-      }
-
-      if (selectedImageFile && selectedImageBase64) {
-        const cleanName = Date.now() + "_" + selectedImageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        showToast("⏳ Uploading ad graphic to GitHub...");
-        const uploadedPath = await uploadImageToGitHub(cleanName, selectedImageBase64);
-        if (uploadedPath) {
-          creativeUrl = uploadedPath;
-        }
-      }
-
-      if (editingCampaignId) {
-        const idx = allCampaigns.findIndex(c => c.id === editingCampaignId);
-        if (idx !== -1) {
-          allCampaigns[idx].title = title;
-          allCampaigns[idx].name = title;
-          allCampaigns[idx].target_game_id = targetId;
-          allCampaigns[idx].ad_unit = adUnit;
-          allCampaigns[idx].description = desc;
-          allCampaigns[idx].target_url = urlAndroid;
-          allCampaigns[idx].target_url_android = urlAndroid;
-          allCampaigns[idx].target_url_ios = urlIos;
-          allCampaigns[idx].priority = priority;
-          allCampaigns[idx].ad_type = adType;
-          allCampaigns[idx].creative_interstitial_url = creativeUrl;
-        }
-      } else {
-        const newCamp = {
-          id: "cmp_" + Date.now().toString(36),
-          name: title,
-          target_game_id: targetId,
-          platform: "all",
-          is_active: true,
-          title: title,
-          description: desc,
-          target_url: urlAndroid,
-          target_url_android: urlAndroid,
-          target_url_ios: urlIos,
-          target_url_web: urlAndroid,
-          ad_type: adType,
-          ad_unit: adUnit,
-          creative_interstitial_url: creativeUrl,
-          creative_banner_url: "creatives/creative_cooking_banner.png",
-          creative_icon_url: "creatives/261c99a113c3_icon.png",
-          priority: priority,
-          frequency_cap: 0,
-          impressions: 0,
-          clicks: 0
-        };
-        allCampaigns.unshift(newCamp);
-      }
-
-      closeModal();
-      saveToLocalCache();
-      updateOverviewStats();
-      renderCampaigns();
-      renderAnalyticsTable();
-      showSimAd(0);
-      showToast("💾 Saving campaign to GitHub...");
-      await autoSaveToGitHub();
-    }
-
-    async function uploadImageToGitHub(filename, base64Data) {
-      const token = getToken();
-      if (!token) return null;
-
+    async function fetchRepoSha() {
+      const token = getActiveToken();
+      if (!token) return;
       try {
-        const apiUrl = "https://api.github.com/repos/" + GITHUB_REPO + "/contents/creatives/" + filename;
-        const res = await fetch(apiUrl, {
-          method: "PUT",
-          headers: {
-            "Authorization": "token " + token,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            message: "Upload creative graphic: " + filename,
-            content: base64Data
-          })
+        const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`, {
+          headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
         });
         if (res.ok) {
-          return "creatives/" + filename;
-        } else {
-          const err = await res.json();
-          alert("GitHub Upload Error: " + (err.message || "Failed to upload image."));
-          return null;
+          const data = await res.json();
+          repoSha = data.sha;
         }
       } catch (e) {
-        console.error("Upload error:", e);
-        return null;
+        console.warn("Could not fetch repo SHA", e);
       }
     }
 
-    async function autoSaveToGitHub() {
-      await saveAndPublishToGitHub(false);
+    function getActiveToken() {
+      const custom = localStorage.getItem("cp_github_token");
+      if (custom && custom.trim()) return custom.trim();
+      return getDecodedToken();
     }
 
-    async function saveAndPublishToGitHub(showPrompt = true) {
-      const token = getToken();
+    // Save Campaigns to GitHub Repository
+    async function saveCampaignsToGitHub(updatedList, commitMsg = "Update campaigns via ArtSphere AdMatrix") {
+      allCampaigns = updatedList;
+      localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(allCampaigns));
+      applyFilters();
+      updateKPIs();
+      renderAnalytics();
+
+      const token = getActiveToken();
       if (!token) {
-        openTokenModal();
+        showToast("⚠️ Changes saved in browser, but GitHub token is missing for cloud push.", true);
         return;
       }
 
-      const btn = document.getElementById("btnSync");
-      if (btn) btn.innerText = "⏳ Saving...";
+      showToast("⏳ Synchronizing with GitHub Pages CDN...");
 
       try {
-        const apiUrl = "https://api.github.com/repos/" + GITHUB_REPO + "/contents/campaigns.json";
-        
-        let sha = null;
-        const getRes = await fetch(apiUrl, {
-          headers: { 
-            "Authorization": "token " + token,
-            "Accept": "application/vnd.github.v3+json"
+        if (!repoSha) {
+          const checkRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`, {
+            headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
+          });
+          if (checkRes.ok) {
+            const checkData = await checkRes.json();
+            repoSha = checkData.sha;
           }
-        });
-        if (getRes.ok) {
-          const fileData = await getRes.json();
-          sha = fileData.sha;
         }
 
-        const updatedJson = JSON.stringify({ success: true, campaigns: allCampaigns }, null, 2);
-        const base64Content = btoa(unescape(encodeURIComponent(updatedJson)));
+        const payload = {
+          success: true,
+          campaigns: allCampaigns
+        };
+        const contentStr = JSON.stringify(payload, null, 2);
+        const encodedContent = btoa(unescape(encodeURIComponent(contentStr)));
 
-        const putRes = await fetch(apiUrl, {
+        const bodyData = {
+          message: commitMsg,
+          content: encodedContent,
+          branch: GH_BRANCH
+        };
+        if (repoSha) bodyData.sha = repoSha;
+
+        const putRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`, {
           method: "PUT",
           headers: {
-            "Authorization": "token " + token,
+            "Authorization": `token ${token}`,
             "Content-Type": "application/json",
             "Accept": "application/vnd.github.v3+json"
           },
-          body: JSON.stringify({
-            message: "Update campaigns.json from Web Control Center",
-            content: base64Content,
-            sha: sha
-          })
+          body: JSON.stringify(bodyData)
         });
 
         if (putRes.ok) {
-          markLocalCacheSaved();
-          showToast("🎉 Saved to GitHub! Live across all games.");
+          const resData = await putRes.json();
+          repoSha = resData.content?.sha || "";
+          showToast("✅ Successfully deployed to GitHub Pages & Unity Clients!");
         } else {
-          const err = await putRes.json();
-          console.error("GitHub API error:", err);
-          showToast("❌ GitHub Error: " + (err.message || "Failed to save"), true);
+          const errData = await putRes.json();
+          console.error("GitHub sync error:", errData);
+          showToast(`⚠️ Local updated. GitHub sync status: ${errData.message || "Conflict"}`, true);
+          repoSha = "";
         }
       } catch (err) {
-        console.error("Sync error:", err);
-        showToast("❌ Network error connecting to GitHub API", true);
-      } finally {
-        if (btn) btn.innerText = "💾 Publish Changes";
+        console.error("Failed to commit to GitHub", err);
+        showToast("⚠️ Network issue: changes saved in browser storage.", true);
       }
     }
 
-    function showSimAd(idx) {
-      const img = document.getElementById("simImage");
-      const title = document.getElementById("simTitle");
-      const desc = document.getElementById("simDesc");
-      const link = document.getElementById("simLink");
-      const closeBtn = document.getElementById("simCloseBtn");
+    // Filter & Search Logic
+    function handleSearch() {
+      searchQuery = document.getElementById("searchInput").value.toLowerCase();
+      applyFilters();
+    }
 
-      if (!allCampaigns || allCampaigns.length === 0) {
-        if (title) title.innerText = "No Active Campaigns";
-        if (desc) desc.innerText = "Click '+ Add Campaign' above to create one";
-        if (img) img.src = "";
-        if (link) link.style.display = "none";
+    function setFilter(filterName) {
+      currentFilter = filterName;
+      document.querySelectorAll(".filter-pills .pill").forEach(p => p.classList.remove("active"));
+      if (window.event && window.event.target) {
+        window.event.target.classList.add("active");
+      }
+      applyFilters();
+    }
+
+    function applyFilters() {
+      filteredCampaigns = allCampaigns.filter(c => {
+        const matchesSearch = !searchQuery || 
+          (c.name && c.name.toLowerCase().includes(searchQuery)) ||
+          (c.title && c.title.toLowerCase().includes(searchQuery)) ||
+          (c.target_game_id && c.target_game_id.toLowerCase().includes(searchQuery)) ||
+          (c.ad_unit && c.ad_unit.toLowerCase().includes(searchQuery));
+
+        if (!matchesSearch) return false;
+
+        if (currentFilter === "all") return true;
+        if (currentFilter === "active") return c.is_active === true;
+        if (currentFilter === "main_play_button") return c.ad_unit === "main_play_button" || c.ad_unit === "all";
+        if (currentFilter === "scene_transition") return c.ad_unit === "scene_transition" || c.ad_unit === "all";
+        return true;
+      });
+
+      renderCampaigns();
+    }
+
+    // Render Campaign List
+    function renderCampaigns() {
+      const container = document.getElementById("campaignListContainer");
+      document.getElementById("tabCampaignCount").textContent = allCampaigns.length;
+
+      if (filteredCampaigns.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 3rem; background: var(--bg-card); border-radius: 14px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>
+            <h3 style="font-size: 1.1rem; font-weight: 700;">No matching campaigns found</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Try adjusting search terms or placement filters.</p>
+          </div>
+        `;
         return;
       }
-      if (link) link.style.display = "block";
 
-      currentSimIndex = idx % allCampaigns.length;
-      const c = allCampaigns[currentSimIndex];
+      container.innerHTML = filteredCampaigns.map((c, idx) => {
+        const realIndex = allCampaigns.findIndex(item => item.id === c.id);
+        const ctr = c.impressions > 0 ? ((c.clicks / c.impressions) * 100).toFixed(1) : "0.0";
+        const isLive = c.is_active !== false;
+        const imgUrl = resolveImgUrl(c.creative_interstitial_url || c.creative_banner_url);
 
-      img.src = c.creative_interstitial_url || c.creative_banner_url || "creatives/273a86dd5b1b_Boy_lowering_wooden_bow_202609071548.jpeg";
-      title.innerText = c.title || c.name;
-      desc.innerText = c.description || "";
-      link.href = c.target_url_android || c.target_url || "#";
+        return `
+          <div class="campaign-card ${isLive ? "" : "inactive"}" id="card_${c.id}">
+            <div class="campaign-card-inner">
+              <div class="campaign-thumb-wrap" onclick="setupSimulatorAd(${realIndex})">
+                <img src="${imgUrl}" alt="${escapeHtml(c.title || c.name)}" onerror="this.src='creatives/261c99a113c3_icon.png'">
+                <span class="thumb-type-badge">${c.ad_type || "interstitial"}</span>
+              </div>
 
-      // Increment simulator preview impression
-      c.impressions = (c.impressions || 0) + 1;
-      updateOverviewStats();
+              <div class="campaign-details">
+                <div class="campaign-title-row">
+                  <span class="campaign-title">${escapeHtml(c.title || c.name)}</span>
+                  <span class="badge-unit">${c.ad_unit || "all"}</span>
+                  ${isLive ? '<span class="badge-active">● ACTIVE</span>' : '<span class="badge-paused">○ PAUSED</span>'}
+                </div>
 
-      if (countdownInterval) clearInterval(countdownInterval);
+                <div class="campaign-desc">${escapeHtml(c.description || "In-game cross-promotion ad for studio players")}</div>
+
+                <div class="campaign-meta-row">
+                  <div class="meta-item">
+                    <span>Priority:</span>
+                    <strong>${c.priority || 50}</strong>
+                  </div>
+                  <div class="meta-item">
+                    <span>Impressions:</span>
+                    <strong>${(c.impressions || 0).toLocaleString()}</strong>
+                  </div>
+                  <div class="meta-item">
+                    <span>Clicks:</span>
+                    <strong>${(c.clicks || 0).toLocaleString()}</strong>
+                  </div>
+                  <div class="meta-item">
+                    <span>CTR:</span>
+                    <span class="meta-ctr">${ctr}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="campaign-card-actions">
+                <!-- On/Off Switch -->
+                <label class="switch ${isAdminAuthenticated ? "" : "locked"}" title="${isAdminAuthenticated ? "Toggle Campaign Active Status" : "🔒 Admin Login Required to Toggle"}">
+                  <input type="checkbox" ${isLive ? "checked" : ""} onchange="handleToggleActive('${c.id}', this.checked, this)">
+                  <span class="slider"></span>
+                </label>
+
+                <!-- Preview Button -->
+                <button class="btn btn-secondary btn-sm" onclick="setupSimulatorAd(${realIndex})" title="Preview in Phone Simulator">
+                  📱 Test
+                </button>
+
+                <!-- Edit Button -->
+                <button class="btn btn-secondary btn-sm" onclick="handleEditCampaign('${c.id}')" title="${isAdminAuthenticated ? "Edit Campaign" : "🔒 Admin Login Required"}">
+                  ${isAdminAuthenticated ? "✏️ Edit" : "🔒"}
+                </button>
+
+                <!-- Delete Button -->
+                <button class="btn btn-danger btn-sm" onclick="handleDeleteCampaign('${c.id}')" title="${isAdminAuthenticated ? "Delete Campaign" : "🔒 Admin Login Required"}">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Toggle Active/Inactive
+    function handleToggleActive(campaignId, newStatus, checkboxElem) {
+      if (!isAdminAuthenticated) {
+        checkboxElem.checked = !newStatus;
+        openAdminModal();
+        showToast("🔒 Admin Login Required: Only authorized administrators can toggle live ads.", true);
+        return;
+      }
+
+      const cmp = allCampaigns.find(c => c.id === campaignId);
+      if (!cmp) return;
+
+      cmp.is_active = newStatus;
+      const statusText = newStatus ? "Activated (LIVE)" : "Paused";
+      showToast(`⚡ Campaign "${cmp.title || cmp.name}" is now ${statusText}.`);
+      saveCampaignsToGitHub(allCampaigns, `Toggle campaign ${cmp.name} to ${statusText}`);
+    }
+
+    // Edit Campaign
+    function handleEditCampaign(campaignId) {
+      requireAdmin("edit this campaign", () => {
+        const cmp = allCampaigns.find(c => c.id === campaignId);
+        if (!cmp) return;
+
+        document.getElementById("modalCampaignTitle").textContent = "Edit Campaign";
+        document.getElementById("modalCampaignIcon").textContent = "✏️";
+        document.getElementById("campaignId").value = cmp.id;
+        document.getElementById("cmpName").value = cmp.name || "";
+        document.getElementById("cmpGameId").value = cmp.target_game_id || "";
+        document.getElementById("cmpAdUnit").value = cmp.ad_unit || "main_play_button";
+        document.getElementById("cmpAdType").value = cmp.ad_type || "interstitial";
+        document.getElementById("cmpTargetUrl").value = cmp.target_url || cmp.target_url_android || "";
+        document.getElementById("cmpCreativeUrl").value = cmp.creative_interstitial_url || "";
+        document.getElementById("cmpBannerUrl").value = cmp.creative_banner_url || "";
+        document.getElementById("cmpPriority").value = cmp.priority || 50;
+        document.getElementById("cmpStatus").value = cmp.is_active !== false ? "true" : "false";
+
+        document.getElementById("campaignModal").style.display = "flex";
+      });
+    }
+
+    function openNewCampaignModal() {
+      document.getElementById("modalCampaignTitle").textContent = "Create New Campaign";
+      document.getElementById("modalCampaignIcon").textContent = "⚡";
+      document.getElementById("campaignId").value = "";
+      document.getElementById("campaignForm").reset();
+      document.getElementById("cmpPriority").value = "50";
+      document.getElementById("cmpStatus").value = "true";
+      document.getElementById("campaignModal").style.display = "flex";
+    }
+
+    function closeCampaignModal() {
+      document.getElementById("campaignModal").style.display = "none";
+    }
+
+    // Save Campaign Form Submit
+    function handleCampaignSubmit(event) {
+      event.preventDefault();
+      if (!isAdminAuthenticated) {
+        closeCampaignModal();
+        openAdminModal();
+        return;
+      }
+
+      const id = document.getElementById("campaignId").value;
+      const name = document.getElementById("cmpName").value.trim();
+      const gameId = document.getElementById("cmpGameId").value.trim();
+      const adUnit = document.getElementById("cmpAdUnit").value;
+      const adType = document.getElementById("cmpAdType").value;
+      const targetUrl = document.getElementById("cmpTargetUrl").value.trim();
+      const creativeUrl = document.getElementById("cmpCreativeUrl").value.trim();
+      const bannerUrl = document.getElementById("cmpBannerUrl").value.trim();
+      const priority = parseInt(document.getElementById("cmpPriority").value) || 50;
+      const isActive = document.getElementById("cmpStatus").value === "true";
+
+      if (id) {
+        const idx = allCampaigns.findIndex(c => c.id === id);
+        if (idx !== -1) {
+          allCampaigns[idx] = {
+            ...allCampaigns[idx],
+            name,
+            target_game_id: gameId,
+            title: name,
+            ad_unit: adUnit,
+            ad_type: adType,
+            target_url: targetUrl,
+            target_url_android: targetUrl,
+            target_url_web: targetUrl,
+            creative_interstitial_url: creativeUrl,
+            creative_banner_url: bannerUrl || creativeUrl,
+            priority,
+            is_active: isActive
+          };
+          showToast(`✅ Campaign "${name}" updated successfully!`);
+        }
+      } else {
+        const newId = "cmp_" + Date.now();
+        const newCampaign = {
+          id: newId,
+          name,
+          target_game_id: gameId,
+          platform: "all",
+          title: name,
+          description: "Download and experience our studio title today!",
+          target_url: targetUrl,
+          target_url_android: targetUrl,
+          target_url_ios: targetUrl,
+          target_url_web: targetUrl,
+          ad_type: adType,
+          ad_unit: adUnit,
+          creative_interstitial_url: creativeUrl,
+          creative_banner_url: bannerUrl || creativeUrl,
+          creative_icon_url: "creatives/261c99a113c3_icon.png",
+          priority,
+          frequency_cap: 0,
+          is_active: isActive,
+          impressions: 0,
+          clicks: 0
+        };
+        allCampaigns.unshift(newCampaign);
+        showToast(`🎉 New campaign "${name}" created!`);
+      }
+
+      closeCampaignModal();
+      saveCampaignsToGitHub(allCampaigns, `Save campaign ${name}`);
+    }
+
+    // Delete Campaign
+    function handleDeleteCampaign(campaignId) {
+      requireAdmin("delete this campaign", () => {
+        const cmp = allCampaigns.find(c => c.id === campaignId);
+        if (!cmp) return;
+
+        if (confirm(`Are you sure you want to delete campaign "${cmp.title || cmp.name}"?
+This action will immediately remove it from all Unity game clients.`)) {
+          allCampaigns = allCampaigns.filter(c => c.id !== campaignId);
+          showToast(`🗑️ Campaign "${cmp.title || cmp.name}" deleted.`);
+          saveCampaignsToGitHub(allCampaigns, `Delete campaign ${cmp.name}`);
+        }
+      });
+    }
+
+    // Simulator Logic
+    function setupSimulatorAd(campaignIndex) {
+      if (!allCampaigns || allCampaigns.length === 0) return;
+      if (campaignIndex < 0 || campaignIndex >= allCampaigns.length) campaignIndex = 0;
+      currentSimIndex = campaignIndex;
+
+      const cmp = allCampaigns[campaignIndex];
+      const interstitialElem = document.getElementById("simInterstitial");
+      const bannerElem = document.getElementById("simBannerTop");
+      const simCreativeImg = document.getElementById("simCreativeImg");
+      const simBannerImg = document.getElementById("simBannerImg");
+      const simBannerTitle = document.getElementById("simBannerTitle");
+      const simUnitLabel = document.getElementById("simCurrentUnit");
+      const simAdMobStatus = document.getElementById("simAdMobStatus");
+
+      simUnitLabel.textContent = cmp.ad_unit || "all";
+
+      const fullCreativeUrl = resolveImgUrl(cmp.creative_interstitial_url || cmp.creative_banner_url);
+      const fullBannerUrl = resolveImgUrl(cmp.creative_banner_url || cmp.creative_interstitial_url);
+
+      simCreativeImg.src = fullCreativeUrl;
+      simBannerImg.src = fullBannerUrl;
+      simBannerTitle.textContent = cmp.title || cmp.name;
+
+      if (cmp.ad_type === "banner") {
+        interstitialElem.style.display = "none";
+        bannerElem.style.display = "flex";
+        simAdMobStatus.textContent = "AdMob Banner Active";
+        simAdMobStatus.style.color = "#a5b4fc";
+      } else {
+        interstitialElem.style.display = "flex";
+        bannerElem.style.display = "none";
+        simAdMobStatus.textContent = "✅ Suppressed while Ad Active";
+        simAdMobStatus.style.color = "#34d399";
+        startSimTimer();
+      }
+    }
+
+    function startSimTimer() {
+      if (simTimerInterval) clearInterval(simTimerInterval);
       let count = 3;
-      closeBtn.innerText = count;
+      const closeBtn = document.getElementById("simCloseBtn");
+      const timerText = document.getElementById("simTimerText");
+
+      timerText.textContent = `Reward in ${count}s`;
       closeBtn.style.pointerEvents = "none";
       closeBtn.style.opacity = "0.7";
 
-      countdownInterval = setInterval(() => {
+      simTimerInterval = setInterval(() => {
         count--;
-        if (count > 0) {
-          closeBtn.innerText = count;
-        } else {
-          clearInterval(countdownInterval);
-          closeBtn.innerText = "✕";
+        if (count <= 0) {
+          clearInterval(simTimerInterval);
+          timerText.textContent = "Close";
           closeBtn.style.pointerEvents = "auto";
           closeBtn.style.opacity = "1";
+        } else {
+          timerText.textContent = `Reward in ${count}s`;
         }
       }, 1000);
     }
 
-    function closeSimAd() {
-      showSimAd(currentSimIndex + 1);
+    function simulateAdClose() {
+      const interstitial = document.getElementById("simInterstitial");
+      interstitial.style.display = "none";
+      showToast("🎮 Interstitial closed. Returning to game scene.");
+      setTimeout(() => {
+        setupSimulatorAd(currentSimIndex);
+      }, 3000);
     }
 
-    function filterSimulator(unit) {
-      document.querySelectorAll(".unit-btn").forEach(b => b.classList.remove("active"));
-      event.target.classList.add("active");
+    function simulateAdClick() {
+      const cmp = allCampaigns[currentSimIndex];
+      if (!cmp) return;
 
-      if (unit === "all") {
-        showSimAd(0);
+      cmp.clicks = (cmp.clicks || 0) + 1;
+      updateKPIs();
+      renderCampaigns();
+      renderAnalytics();
+
+      showToast(`🎯 Store Click Simulated! Directing to ${cmp.title || cmp.name}...`);
+
+      const targetUrl = cmp.target_url || cmp.target_url_android;
+      if (targetUrl) {
+        window.open(targetUrl, "_blank");
+      }
+    }
+
+    function replaySimulation() {
+      setupSimulatorAd(currentSimIndex);
+    }
+
+    function setOrientation(orientation) {
+      simOrientation = orientation;
+      const phone = document.getElementById("phoneMockup");
+      const btnPort = document.getElementById("btnDevPortrait");
+      const btnLand = document.getElementById("btnDevLandscape");
+
+      if (orientation === "landscape") {
+        phone.classList.add("landscape");
+        btnLand.classList.add("active");
+        btnPort.classList.remove("active");
+      } else {
+        phone.classList.remove("landscape");
+        btnPort.classList.add("active");
+        btnLand.classList.remove("active");
+      }
+    }
+
+    // KPI Calculations
+    function updateKPIs() {
+      let totalImp = 0;
+      let totalClicks = 0;
+      let activeCount = 0;
+
+      allCampaigns.forEach(c => {
+        totalImp += (c.impressions || 0);
+        totalClicks += (c.clicks || 0);
+        if (c.is_active !== false) activeCount++;
+      });
+
+      const overallCtr = totalImp > 0 ? ((totalClicks / totalImp) * 100).toFixed(2) : "0.00";
+
+      document.getElementById("kpiImpressions").textContent = totalImp.toLocaleString();
+      document.getElementById("kpiClicks").textContent = totalClicks.toLocaleString();
+      document.getElementById("kpiCtr").textContent = `${overallCtr}%`;
+      document.getElementById("kpiActiveCount").textContent = `${activeCount} / ${allCampaigns.length}`;
+      document.getElementById("kpiActiveStatus").textContent = `${activeCount} campaigns currently live`;
+    }
+
+    // Analytics Tab Rendering
+    function renderAnalytics() {
+      const tbody = document.getElementById("analyticsTableBody");
+      if (!tbody) return;
+
+      tbody.innerHTML = allCampaigns.map(c => {
+        const ctr = c.impressions > 0 ? ((c.clicks / c.impressions) * 100).toFixed(2) : "0.00";
+        const ctrNum = parseFloat(ctr);
+        const barWidth = Math.min(Math.max(ctrNum * 4, 8), 100);
+        const rating = ctrNum > 12 ? "🔥 Exceptional" : ctrNum > 6 ? "🟢 Strong" : "⚡ Moderate";
+
+        return `
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: white;">${escapeHtml(c.title || c.name)}</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">${c.target_game_id}</div>
+            </td>
+            <td><span class="badge-unit">${c.ad_unit || "all"}</span></td>
+            <td style="font-family: var(--font-mono);">${(c.impressions || 0).toLocaleString()}</td>
+            <td style="font-family: var(--font-mono); font-weight: 700; color: #34d399;">${(c.clicks || 0).toLocaleString()}</td>
+            <td>
+              <div class="ctr-bar-bg"><div class="ctr-bar-fill" style="width: ${barWidth}%;"></div></div>
+              <strong style="font-family: var(--font-mono);">${ctr}%</strong>
+            </td>
+            <td><span style="font-size: 0.8rem; font-weight: 700;">${rating}</span></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    // Creative Assets Tab Rendering
+    const KNOWN_ASSETS = [
+      { name: "creative_cooking_interstitial.png", path: "creatives/273a86dd5b1b_Boy_lowering_wooden_bow_202609071548.jpeg", dims: "1080x1920 (9:16)" },
+      { name: "creative_truck_interstitial.png", path: "creatives/creative_truck_interstitial.png", dims: "1080x1920 (9:16)" },
+      { name: "creative_seaport_interstitial.png", path: "creatives/creative_seaport_interstitial.png", dims: "1080x1920 (9:16)" },
+      { name: "creative_cooking_banner.png", path: "creatives/creative_cooking_banner.png", dims: "320x50 (Banner)" },
+      { name: "creative_truck_banner.png", path: "creatives/creative_truck_banner.png", dims: "320x50 (Banner)" },
+      { name: "creative_seaport_banner.png", path: "creatives/creative_seaport_banner.png", dims: "320x50 (Banner)" }
+    ];
+
+    function renderAssets() {
+      const grid = document.getElementById("assetsGrid");
+      if (!grid) return;
+
+      grid.innerHTML = KNOWN_ASSETS.map(a => {
+        return `
+          <div class="asset-card">
+            <div class="asset-preview">
+              <img src="${a.path}" alt="${a.name}" onerror="this.src='creatives/261c99a113c3_icon.png'">
+            </div>
+            <div class="asset-info">
+              <div class="asset-name" title="${a.name}">${a.name}</div>
+              <div>${a.dims}</div>
+              <button class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 0.5rem;" onclick="copyToClipboard('${a.path}')">
+                Copy Path
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Asset Upload Modal
+    function openAssetUploadModal() {
+      requireAdmin("upload creative assets to repository", () => {
+        document.getElementById("uploadAssetForm").reset();
+        document.getElementById("uploadPreviewBox").style.display = "none";
+        document.getElementById("assetUploadModal").style.display = "flex";
+      });
+    }
+
+    function closeAssetUploadModal() {
+      document.getElementById("assetUploadModal").style.display = "none";
+    }
+
+    function previewUploadImage(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        document.getElementById("uploadPreviewImg").src = event.target.result;
+        document.getElementById("uploadPreviewBox").style.display = "block";
+        document.getElementById("uploadFileInfo").textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        if (!document.getElementById("assetTargetFilename").value) {
+          const cleanName = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, "_");
+          document.getElementById("assetTargetFilename").value = `creative_${cleanName}`;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function handleAssetUploadSubmit(event) {
+      event.preventDefault();
+      const fileInput = document.getElementById("assetFileInput");
+      const filename = document.getElementById("assetTargetFilename").value.trim();
+
+      if (!fileInput.files[0] || !filename) return;
+      const file = fileInput.files[0];
+
+      const token = getActiveToken();
+      if (!token) {
+        showToast("⚠️ Missing GitHub write token.", true);
         return;
       }
-      const foundIdx = allCampaigns.findIndex(c => c.ad_unit === unit || c.ad_unit === "all");
-      if (foundIdx !== -1) {
-        showSimAd(foundIdx);
+
+      showToast(`⏳ Uploading creative ${filename} to GitHub repository...`);
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const base64Content = e.target.result.split(",")[1];
+        const targetPath = `creatives/${filename}`;
+
+        try {
+          const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${targetPath}`, {
+            method: "PUT",
+            headers: {
+              "Authorization": `token ${token}`,
+              "Content-Type": "application/json",
+              "Accept": "application/vnd.github.v3+json"
+            },
+            body: JSON.stringify({
+              message: `Add creative asset ${filename} via ArtSphere AdMatrix`,
+              content: base64Content,
+              branch: GH_BRANCH
+            })
+          });
+
+          if (res.ok) {
+            showToast(`✅ Asset uploaded! Path: ${targetPath}`);
+            KNOWN_ASSETS.unshift({ name: filename, path: targetPath, dims: "Custom Graphic" });
+            renderAssets();
+            closeAssetUploadModal();
+          } else {
+            const err = await res.json();
+            showToast(`⚠️ Upload error: ${err.message || "Failed"}`, true);
+          }
+        } catch (err) {
+          showToast("⚠️ Network failed while uploading asset.", true);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function pickFromAssets() {
+      const asset = KNOWN_ASSETS[0];
+      if (asset) {
+        document.getElementById("cmpCreativeUrl").value = asset.path;
+        showToast(`Selected asset: ${asset.path}`);
       }
     }
 
-    function openTokenModal() {
-      document.getElementById("inpGithubToken").value = getToken();
-      document.getElementById("tokenModal").style.display = "flex";
+    // Tabs Switcher
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+
+      const targetBtn = Array.from(document.querySelectorAll(".tab-btn")).find(b => b.getAttribute("onclick") && b.getAttribute("onclick").includes(tabId));
+      if (targetBtn) targetBtn.classList.add("active");
+
+      const targetContent = document.getElementById(`tabContent_${tabId}`);
+      if (targetContent) targetContent.classList.add("active");
     }
-    function closeTokenModal() {
-      document.getElementById("tokenModal").style.display = "none";
+
+    // Utility Helpers
+    function resolveImgUrl(url) {
+      if (!url) return "creatives/261c99a113c3_icon.png";
+      if (url.startsWith("http://") || url.startsWith("https://")) return url;
+      return url;
     }
-    function saveToken() {
-      const val = document.getElementById("inpGithubToken").value.trim();
-      if (val) {
-        localStorage.setItem("cp_github_token", val);
-        showToast("✅ Token saved in your browser!");
-      }
-      closeTokenModal();
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
     function showToast(msg, isError = false) {
       const box = document.getElementById("toastBox");
       if (!box) return;
-      box.innerText = msg;
-      box.style.display = "block";
-      box.style.borderLeft = isError ? "4px solid #ef4444" : "4px solid #10b981";
-      setTimeout(() => { box.style.display = "none"; }, 3500);
+
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      if (isError) toast.style.borderLeftColor = "#ef4444";
+      toast.innerHTML = msg;
+
+      box.appendChild(toast);
+      box.style.display = "flex";
+
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
     }
 
-    window.addEventListener("click", function(event) {
-      if (event.target === document.getElementById("campaignModal")) closeModal();
-      if (event.target === document.getElementById("statsModal")) closeStatsModal();
-      if (event.target === document.getElementById("tokenModal")) closeTokenModal();
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("📋 Copied to clipboard: " + text);
+      }).catch(() => {
+        showToast("Clipboard copy failed", true);
+      });
+    }
+
+    // Window click & key dismiss
+    window.addEventListener("click", e => {
+      if (e.target === document.getElementById("adminLoginModal")) closeAdminModal();
+      if (e.target === document.getElementById("campaignModal")) closeCampaignModal();
+      if (e.target === document.getElementById("assetUploadModal")) closeAssetUploadModal();
     });
 
-    window.addEventListener("keydown", function(event) {
-      if (event.key === "Escape") {
-        closeModal();
-        closeStatsModal();
-        closeTokenModal();
+    window.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        closeAdminModal();
+        closeCampaignModal();
+        closeAssetUploadModal();
       }
     });
-
-    window.addEventListener("DOMContentLoaded", loadCampaigns);
   </script>
 </body>
 </html>
