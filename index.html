@@ -1429,7 +1429,7 @@
         <div class="form-group">
           <label class="form-label">Admin Password</label>
           <input type="password" id="adminPassword" class="form-input" placeholder="Enter studio password" required>
-          <small style="color: var(--text-dim); font-size: 0.72rem; margin-top: 0.3rem; display: block;">Default credentials: admin / artsphere2026</small>
+          <small style="color: var(--text-dim); font-size: 0.72rem; margin-top: 0.3rem; display: block;">Authorized Studio Administrator Access</small>
         </div>
 
         <div class="form-group">
@@ -1592,8 +1592,8 @@
 
     // Default Admin Credentials
     const DEFAULT_ADMIN_USER = "admin";
-    const DEFAULT_ADMIN_PASS = "artsphere2026";
-    const ALT_ADMIN_PASS = "admin123";
+    const DEFAULT_ADMIN_PASS = "dr4393250";
+    const ALT_ADMIN_PASS = "artsphere2026";
 
     // State
     let allCampaigns = [];
@@ -1699,7 +1699,7 @@
       const remember = document.getElementById("adminRemember").checked;
 
       if ((user.toLowerCase() === DEFAULT_ADMIN_USER || user.toLowerCase() === "artsphere") && 
-          (pass === DEFAULT_ADMIN_PASS || pass === ALT_ADMIN_PASS || pass === "admin")) {
+          (pass === DEFAULT_ADMIN_PASS || pass === ALT_ADMIN_PASS)) {
         
         if (customToken) {
           localStorage.setItem("cp_github_token", customToken);
@@ -1714,7 +1714,7 @@
         closeAdminModal();
         setAdminState(true, true);
       } else {
-        alert("❌ Invalid Admin Credentials. Please enter the correct Studio password (default: artsphere2026).");
+        alert("❌ Invalid Admin Credentials. Please enter the correct Studio password.");
       }
     }
 
