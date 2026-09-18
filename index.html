@@ -632,7 +632,24 @@
       display: flex;
       flex-direction: column;
     }
-    .phone-mockup.landscape { width: 360px; height: 240px; border-radius: 26px; border-width: 8px; }
+    .phone-mockup.landscape { width: 380px; height: 235px; border-radius: 26px; border-width: 8px; }
+    .phone-mockup.landscape .phone-notch {
+      top: 50%;
+      left: 6px;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 50px;
+    }
+    .phone-mockup.landscape .ad-top-bar {
+      padding: 0.5rem 0.75rem 0.35rem;
+    }
+    .phone-mockup.landscape .ad-bottom-bar {
+      padding: 0.4rem 0.75rem;
+    }
+    .phone-mockup.landscape .ad-cta-btn {
+      padding: 0.38rem;
+      font-size: 0.75rem;
+    }
     .phone-notch {
       position: absolute;
       top: 6px;
@@ -677,9 +694,9 @@
     .ad-interstitial-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.95);
       z-index: 20;
-      display: none;
+      display: flex;
       flex-direction: column;
       animation: fadeIn 0.3s ease;
     }
@@ -1185,77 +1202,101 @@
 
   </div>
 
-  <!-- PORTABLE PHONE SIMULATOR TEMPLATE -->
-  <div id="phoneSimulatorMaster" style="display: none;">
-    <div class="simulator-panel">
-      <div class="simulator-header">
-        <div class="simulator-title">
-          <span>📱</span>
-          <span>Live In-Game Preview</span>
-        </div>
-        <div class="device-controls">
-          <button class="dev-btn active" id="btnDevPortrait" onclick="setOrientation('portrait')">Portrait</button>
-          <button class="dev-btn" id="btnDevLandscape" onclick="setOrientation('landscape')">Landscape</button>
-        </div>
+  <!-- PORTABLE PHONE SIMULATOR PANEL -->
+  <div id="phoneSimulatorPanel" class="simulator-panel">
+    <div class="simulator-header">
+      <div class="simulator-title">
+        <span>📱</span>
+        <span>Live In-Game Preview</span>
       </div>
+      <div class="device-controls">
+        <button class="dev-btn active" id="btnDevPortrait" onclick="setOrientation('portrait')">Portrait</button>
+        <button class="dev-btn" id="btnDevLandscape" onclick="setOrientation('landscape')">Landscape</button>
+      </div>
+    </div>
 
-      <!-- Phone Frame -->
-      <div class="phone-mockup" id="phoneMockup">
-        <div class="phone-notch"><div class="phone-camera"></div></div>
+    <!-- Phone Frame -->
+    <div class="phone-mockup" id="phoneMockup">
+      <div class="phone-notch"><div class="phone-camera"></div></div>
 
-        <div class="phone-screen" id="phoneScreen">
-          <!-- Game Scene -->
-          <div class="phone-game-bg">
-            <div style="font-size: 1.1rem; font-weight: 800; color: #c7d2fe;">MY FAMILY WORLD</div>
-            <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 4px;" id="simCurrentSceneName">MAIN MENU (Main.unity)</div>
+      <div class="phone-screen" id="phoneScreen">
+        <!-- Game Scene -->
+        <div class="phone-game-bg">
+          <div style="font-size: 1.1rem; font-weight: 800; color: #c7d2fe;">MY FAMILY WORLD</div>
+          <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 4px;" id="simCurrentSceneName">MAIN MENU (Main.unity)</div>
+        </div>
+
+        <!-- FLOATING CORNER ICON AD WIDGET (ACTIVE IN ICON CAMPAIGNS TAB) -->
+        <div class="sim-corner-icon-widget" id="simCornerIconWidget" onclick="simulateIconAdClick()" title="Tap to Test More Games Icon Ad" style="display: none;">
+          <div class="sim-icon-box" id="simIconBox">
+            <img src="creatives/creative_truck_icon.png" id="simCornerIconImg" class="sim-icon-img" alt="Promoted Game">
+            <span class="sim-corner-ad-badge">AD</span>
           </div>
+          <div class="sim-icon-pill" id="simIconPill">OFFROAD</div>
+        </div>
 
-          <!-- FLOATING CORNER ICON AD WIDGET -->
-          <div class="sim-corner-icon-widget" id="simCornerIconWidget" onclick="simulateIconAdClick()" title="Tap to Test More Games Icon Ad">
-            <div class="sim-icon-box" id="simIconBox">
-              <img src="creatives/creative_truck_icon.png" id="simCornerIconImg" class="sim-icon-img" alt="Promoted Game">
-              <span class="sim-corner-ad-badge">AD</span>
+        <!-- FULL-SCREEN INTERSTITIAL AD OVERLAY (DEFAULT IN MAIN CAMPAIGNS) -->
+        <div class="ad-interstitial-overlay" id="simInterstitial" style="display: flex;">
+          <div class="ad-top-bar">
+            <span class="ad-tag">AD</span>
+            <div class="ad-timer-close" id="simCloseBtn" onclick="simulateAdClose()">
+              <span id="simTimerText">Reward in 3s</span>
+              <span>✕</span>
             </div>
-            <div class="sim-icon-pill" id="simIconPill">OFFROAD</div>
           </div>
-
-          <!-- Interstitial Overlay -->
-          <div class="ad-interstitial-overlay" id="simInterstitial">
-            <div class="ad-top-bar">
-              <span class="ad-tag">AD</span>
-              <div class="ad-timer-close" id="simCloseBtn" onclick="simulateAdClose()">
-                <span id="simTimerText">Reward in 3s</span>
-                <span>✕</span>
-              </div>
-            </div>
-            <div class="ad-creative-container" onclick="simulateInterstitialClick()">
-              <img src="" id="simCreativeImg" class="ad-creative-img" alt="Creative">
-            </div>
-            <div class="ad-bottom-bar">
-              <button class="ad-cta-btn" onclick="simulateInterstitialClick()">▶ INSTALL & PLAY NOW</button>
-            </div>
+          <div class="ad-creative-container" onclick="simulateInterstitialClick()">
+            <img src="creatives/creative_cooking_interstitial.png" id="simCreativeImg" class="ad-creative-img" alt="Creative">
+          </div>
+          <div class="ad-bottom-bar">
+            <button class="ad-cta-btn" id="simCtaBtn" onclick="simulateInterstitialClick()">▶ INSTALL & PLAY NOW</button>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Rotation & Status Controls -->
-      <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.78rem;">
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: var(--text-muted);">Active Corner Ad:</span>
-          <strong id="simActiveIconTitle" style="color: #fde68a;">Offroad Trucker 3D</strong>
-        </div>
-        <div class="sim-rotation-indicator">
-          <span class="sim-rotate-dot"></span>
-          <span>Cycling multiple games every 6 seconds</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 0.2rem;">
-          <span style="color: var(--text-muted);">AdMob Banner:</span>
-          <span style="color: #34d399; font-weight: 700;">✅ Suppressed during ad</span>
-        </div>
-        <button class="btn btn-secondary btn-sm" style="margin-top: 0.4rem;" onclick="cycleIconSimulatorManual()">
-          🔄 Manually Switch Next Icon
+    <!-- Main Campaigns Simulator Controls (Shown in Main Campaigns tab) -->
+    <div id="simControlsInterstitial" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.78rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: var(--text-muted);">Active Interstitial:</span>
+        <strong id="simActiveInterTitle" style="color: #a7f3d0; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Cooking Fun</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: var(--text-muted);">Orientation Mode:</span>
+        <span id="simActiveOrientationTag" style="color: #60a5fa; font-weight: 700; font-size: 0.72rem; background: rgba(59, 130, 246, 0.15); padding: 0.15rem 0.45rem; border-radius: 4px;">
+          📱 Portrait Graphic (9:16)
+        </span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: var(--text-muted);">AdMob Banner:</span>
+        <span style="color: #34d399; font-weight: 700;">✅ Suppressed during ad</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem; margin-top: 0.35rem;">
+        <button class="btn btn-secondary btn-sm" style="flex: 1;" onclick="cycleInterstitialSimulatorManual()">
+          🔄 Next Interstitial
+        </button>
+        <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="reopenInterstitialSimulator()">
+          ▶ Replay Ad
         </button>
       </div>
+    </div>
+
+    <!-- Icon Rotation Controls (Shown in Icon Campaigns tab) -->
+    <div id="simControlsIcons" style="margin-top: 1rem; display: none; flex-direction: column; gap: 0.4rem; font-size: 0.78rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: var(--text-muted);">Active Corner Ad:</span>
+        <strong id="simActiveIconTitle" style="color: #fde68a;">Offroad Trucker 3D</strong>
+      </div>
+      <div class="sim-rotation-indicator">
+        <span class="sim-rotate-dot"></span>
+        <span>Cycling multiple games every 6 seconds</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 0.2rem;">
+        <span style="color: var(--text-muted);">AdMob Banner:</span>
+        <span style="color: #34d399; font-weight: 700;">✅ Active in gameplay</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" style="margin-top: 0.4rem;" onclick="cycleIconSimulatorManual()">
+        🔄 Manually Switch Next Icon
+      </button>
     </div>
   </div>
 
@@ -1353,20 +1394,41 @@
 
         <!-- App Icon Graphic -->
         <div class="form-group" id="groupIconUrl">
-          <label class="form-label">App Icon Graphic (Square PNG/JPG)</label>
+          <label class="form-label">
+            <span>⭐ App Icon Graphic (Square PNG/JPG)</span>
+            <small style="color: var(--text-dim); margin-left: 6px;">Used for Corner Ads & App Branding</small>
+          </label>
           <div style="display: flex; gap: 0.5rem;">
             <input type="text" id="cmpIconUrl" class="form-input" placeholder="creatives/creative_truck_icon.png" required>
             <button type="button" class="btn btn-secondary btn-sm" onclick="pickFromAssets('icon')">Browse</button>
           </div>
         </div>
 
-        <!-- Interstitial Graphic -->
-        <div class="form-group" id="groupCreativeUrl">
-          <label class="form-label">Interstitial Graphic (Portrait Image)</label>
-          <div style="display: flex; gap: 0.5rem;">
-            <input type="text" id="cmpCreativeUrl" class="form-input" placeholder="creatives/creative_truck_interstitial.png">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="pickFromAssets('interstitial')">Browse</button>
+        <!-- Interstitial Dual Orientation Graphics -->
+        <div id="groupInterstitialCreatives">
+          <div class="form-group">
+            <label class="form-label">
+              <span>📱 Portrait Graphic (9:16 Vertical)</span>
+              <small style="color: #60a5fa; margin-left: 6px;">● Auto-runs on portrait games/screens</small>
+            </label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="cmpPortraitUrl" class="form-input" placeholder="creatives/creative_cooking_interstitial.png">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="pickFromAssets('portrait')">Browse</button>
+            </div>
           </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <span>🖥️ Landscape Graphic (16:9 Horizontal)</span>
+              <small style="color: #34d399; margin-left: 6px;">● Auto-runs on landscape games/screens</small>
+            </label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="cmpLandscapeUrl" class="form-input" placeholder="creatives/1789658311820_Boy_lowering_wooden_bow_202609071548.jpeg">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="pickFromAssets('landscape')">Browse</button>
+            </div>
+          </div>
+
+          <input type="hidden" id="cmpCreativeUrl">
         </div>
 
         <div class="form-row">
@@ -1431,6 +1493,34 @@
         </div>
       </form>
     </div>
+  <!-- MODAL: ASSET PICKER / BROWSER -->
+  <div class="modal-backdrop" id="assetPickerModal" style="display: none;">
+    <div class="modal-card" style="max-width: 680px; max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span id="assetPickerIcon">🖼️</span>
+          <span id="assetPickerTitle">Select Graphic Creative</span>
+        </div>
+        <button class="modal-close" onclick="closeAssetPickerModal()">✕</button>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-size: 0.8rem; color: var(--text-muted);" id="assetPickerSubtext">
+          Click any asset below to assign it immediately:
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeAssetPickerModal(); openAssetUploadModal();">
+          📤 Upload New Asset
+        </button>
+      </div>
+
+      <div id="assetPickerGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem; overflow-y: auto; max-height: 52vh; padding: 0.25rem;">
+        <!-- Filled by JS -->
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeAssetPickerModal()">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <!-- Toast Notification Container -->
@@ -1476,13 +1566,19 @@
 
     // Preset Assets
     const KNOWN_ASSETS = [
+      { name: "creative_cooking_interstitial.png", path: "creatives/creative_cooking_interstitial.png", dims: "1080x1920 (9:16 Portrait)", type: "portrait" },
+      { name: "creative_truck_interstitial.png", path: "creatives/creative_truck_interstitial.png", dims: "1080x1920 (9:16 Portrait)", type: "portrait" },
+      { name: "creative_seaport_interstitial.png", path: "creatives/creative_seaport_interstitial.png", dims: "1080x1920 (9:16 Portrait)", type: "portrait" },
+      { name: "1789658311820_Boy_lowering_wooden_bow_202609071548.jpeg", path: "creatives/1789658311820_Boy_lowering_wooden_bow_202609071548.jpeg", dims: "1376x768 (16:9 Landscape)", type: "landscape" },
+      { name: "1789658239628_ChatGPT_Image_Sep_8__2026__07_18_45_PM.png", path: "creatives/1789658239628_ChatGPT_Image_Sep_8__2026__07_18_45_PM.png", dims: "1672x941 (16:9 Landscape)", type: "landscape" },
+      { name: "1789658273660_Boy_retrieves_wooden_arrow_202609071542.jpeg", path: "creatives/1789658273660_Boy_retrieves_wooden_arrow_202609071542.jpeg", dims: "1376x768 (16:9 Landscape)", type: "landscape" },
       { name: "creative_truck_icon.png", path: "creatives/creative_truck_icon.png", dims: "Square Icon", type: "icon" },
       { name: "creative_seaport_icon.png", path: "creatives/creative_seaport_icon.png", dims: "Square Icon", type: "icon" },
+      { name: "creative_cooking_icon.png", path: "creatives/creative_cooking_icon.png", dims: "Square Icon", type: "icon" },
       { name: "261c99a113c3_icon.png", path: "creatives/261c99a113c3_icon.png", dims: "Square Icon", type: "icon" },
       { name: "creative_cooking_banner.png", path: "creatives/creative_cooking_banner.png", dims: "Banner", type: "banner" },
-      { name: "creative_truck_interstitial.png", path: "creatives/creative_truck_interstitial.png", dims: "1080x1920 (9:16)", type: "interstitial" },
-      { name: "creative_seaport_interstitial.png", path: "creatives/creative_seaport_interstitial.png", dims: "1080x1920 (9:16)", type: "interstitial" },
-      { name: "1789658311820_Boy_lowering_wooden_bow_202609071548.jpeg", path: "creatives/1789658311820_Boy_lowering_wooden_bow_202609071548.jpeg", dims: "1080x1920 (9:16)", type: "interstitial" }
+      { name: "creative_truck_banner.png", path: "creatives/creative_truck_banner.png", dims: "Banner", type: "banner" },
+      { name: "creative_seaport_banner.png", path: "creatives/creative_seaport_banner.png", dims: "Banner", type: "banner" }
     ];
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -1493,10 +1589,10 @@
 
     // Mount Phone Simulator in active tab
     function mountSimulator(targetColId) {
-      const master = document.getElementById("phoneSimulatorMaster");
+      const panel = document.getElementById("phoneSimulatorPanel");
       const target = document.getElementById(targetColId);
-      if (master && target) {
-        target.innerHTML = master.innerHTML;
+      if (panel && target && panel.parentElement !== target) {
+        target.appendChild(panel);
       }
     }
 
@@ -1804,12 +1900,16 @@
       const realIndex = allCampaigns.findIndex(item => item.id === c.id);
       const ctr = c.impressions > 0 ? ((c.clicks / c.impressions) * 100).toFixed(1) : "0.0";
       const isLive = c.is_active !== false;
-      const imgUrl = isIconMode ? resolveImgUrl(c.creative_icon_url || c.creative_interstitial_url) : resolveImgUrl(c.creative_interstitial_url || c.creative_icon_url);
+      const hasPortrait = !!(c.creative_interstitial_portrait_url || (!isIconMode && c.creative_interstitial_url));
+      const hasLandscape = !!(c.creative_interstitial_landscape_url);
+      const imgUrl = isIconMode 
+        ? resolveImgUrl(c.creative_icon_url || c.creative_interstitial_portrait_url || c.creative_interstitial_url) 
+        : resolveImgUrl(c.creative_interstitial_portrait_url || c.creative_interstitial_url || c.creative_interstitial_landscape_url || c.creative_icon_url);
 
       return `
         <div class="campaign-card ${isIconMode ? "icon-card" : ""} ${isLive ? "" : "inactive"}" id="card_${c.id}">
           <div class="campaign-card-inner">
-            <div class="campaign-thumb-wrap" onclick="previewCampaignInSimulator('${c.id}')">
+            <div class="campaign-thumb-wrap" onclick="previewCampaignInSimulator('${c.id}')" title="Preview in Phone Simulator">
               <img src="${imgUrl}" alt="${escapeHtml(c.title || c.name)}" onerror="this.src='creatives/creative_truck_icon.png'">
               <span class="thumb-ad-tag">AD</span>
               <span class="thumb-type-badge">${isIconMode ? "⭐ ICON" : (c.ad_type || "interstitial")}</span>
@@ -1830,6 +1930,16 @@
                   <strong>${c.priority || 50}</strong>
                 </div>
                 ${isIconMode ? '<div class="meta-item"><span>Rotation:</span><strong style="color: #f59e0b;">' + (c.rotation_seconds || 6) + 's cycle</strong></div>' : ''}
+                ${!isIconMode ? `
+                <div class="meta-item">
+                  <span>Creatives:</span>
+                  <span style="font-size: 0.72rem;">
+                    <span style="color: ${hasPortrait ? '#34d399' : '#94a3b8'}; font-weight: 700;">${hasPortrait ? '📱 9:16' : '—'}</span>
+                    <span style="color: #64748b; margin: 0 3px;">|</span>
+                    <span style="color: ${hasLandscape ? '#60a5fa' : '#94a3b8'}; font-weight: 700;">${hasLandscape ? '🖥️ 16:9' : '—'}</span>
+                  </span>
+                </div>
+                ` : ''}
                 <div class="meta-item">
                   <span>Impressions:</span>
                   <strong>${(c.impressions || 0).toLocaleString()}</strong>
@@ -1913,7 +2023,12 @@
       document.getElementById("cmpAdUnit").value = editData ? (editData.ad_unit || (isIcon ? "corner_main_page" : "main_play_button")) : (isIcon ? "corner_main_page" : "main_play_button");
       document.getElementById("cmpTargetUrl").value = editData ? (editData.target_url || editData.target_url_android || "") : "";
       document.getElementById("cmpIconUrl").value = editData ? (editData.creative_icon_url || "") : "creatives/creative_truck_icon.png";
+      
+      // Dual Orientation Creatives
+      document.getElementById("cmpPortraitUrl").value = editData ? (editData.creative_interstitial_portrait_url || editData.creative_interstitial_url || "") : "creatives/creative_cooking_interstitial.png";
+      document.getElementById("cmpLandscapeUrl").value = editData ? (editData.creative_interstitial_landscape_url || "") : "creatives/1789658311820_Boy_lowering_wooden_bow_202609071548.jpeg";
       document.getElementById("cmpCreativeUrl").value = editData ? (editData.creative_interstitial_url || "") : "";
+
       document.getElementById("cmpRotationSeconds").value = editData ? (editData.rotation_seconds || 6) : "6";
       document.getElementById("cmpPriority").value = editData ? (editData.priority || 50) : "50";
       document.getElementById("cmpStatus").value = (editData && editData.is_active === false) ? "false" : "true";
@@ -1925,7 +2040,8 @@
     function handleAdTypeChange(type) {
       const isIcon = type === "icon";
       document.getElementById("groupIconUrl").style.display = "block";
-      document.getElementById("groupCreativeUrl").style.display = isIcon ? "none" : "block";
+      const interGroup = document.getElementById("groupInterstitialCreatives");
+      if (interGroup) interGroup.style.display = isIcon ? "none" : "block";
 
       const unitSelect = document.getElementById("cmpAdUnit");
       if (isIcon && !unitSelect.value.startsWith("corner_")) {
@@ -1952,7 +2068,12 @@
       const adUnit = document.getElementById("cmpAdUnit").value;
       const targetUrl = document.getElementById("cmpTargetUrl").value.trim();
       const iconUrl = document.getElementById("cmpIconUrl").value.trim();
-      const creativeUrl = document.getElementById("cmpCreativeUrl").value.trim() || iconUrl;
+      const portraitUrl = document.getElementById("cmpPortraitUrl").value.trim();
+      const landscapeUrl = document.getElementById("cmpLandscapeUrl").value.trim();
+      let creativeUrl = document.getElementById("cmpCreativeUrl").value.trim();
+      if (!creativeUrl) {
+        creativeUrl = portraitUrl || landscapeUrl || iconUrl;
+      }
       const rotSec = parseInt(document.getElementById("cmpRotationSeconds").value) || 6;
       const priority = parseInt(document.getElementById("cmpPriority").value) || 50;
       const isActive = document.getElementById("cmpStatus").value === "true";
@@ -1967,6 +2088,8 @@
             target_url: targetUrl, target_url_android: targetUrl, target_url_web: targetUrl,
             creative_icon_url: iconUrl,
             creative_interstitial_url: creativeUrl,
+            creative_interstitial_portrait_url: portraitUrl || creativeUrl,
+            creative_interstitial_landscape_url: landscapeUrl,
             rotation_seconds: rotSec,
             priority, is_active: isActive
           };
@@ -1982,6 +2105,8 @@
           ad_type: adType, ad_unit: adUnit,
           creative_icon_url: iconUrl,
           creative_interstitial_url: creativeUrl,
+          creative_interstitial_portrait_url: portraitUrl || creativeUrl,
+          creative_interstitial_landscape_url: landscapeUrl,
           creative_banner_url: iconUrl,
           rotation_seconds: rotSec,
           priority, frequency_cap: 0, is_active: isActive,
@@ -2050,30 +2175,68 @@ This removes it from game clients.`)) {
     }
 
     function updateSimulatorDisplay() {
-      const icons = getActiveIconCampaigns();
-      if (icons.length > 0) {
-        if (currentSimIconIndex >= icons.length) currentSimIconIndex = 0;
-        const iconCmp = icons[currentSimIconIndex];
+      const isMainTab = (activeTab === "campaigns");
+      
+      const widget = document.getElementById("simCornerIconWidget");
+      const interstitial = document.getElementById("simInterstitial");
+      const controlsInter = document.getElementById("simControlsInterstitial");
+      const controlsIcons = document.getElementById("simControlsIcons");
 
-        const simIconImg = document.getElementById("simCornerIconImg");
-        const simPill = document.getElementById("simIconPill");
-        const simTitle = document.getElementById("simActiveIconTitle");
+      if (isMainTab) {
+        if (widget) widget.style.display = "none";
+        if (interstitial && interstitial.style.display !== "none") interstitial.style.display = "flex";
+        if (controlsInter) controlsInter.style.display = "flex";
+        if (controlsIcons) controlsIcons.style.display = "none";
 
-        if (simIconImg) simIconImg.src = resolveImgUrl(iconCmp.creative_icon_url || iconCmp.creative_interstitial_url);
-        if (simPill) {
-          const shortTitle = (iconCmp.title || iconCmp.name || "MORE GAMES").split(/[: -]/)[0].toUpperCase();
-          simPill.textContent = shortTitle.substring(0, 10);
+        const interstitials = allCampaigns.filter(c => c.ad_type !== "icon" && c.is_active !== false);
+        if (interstitials.length > 0) {
+          if (currentSimInterIndex >= interstitials.length) currentSimInterIndex = 0;
+          const interCmp = interstitials[currentSimInterIndex];
+
+          const simCreativeImg = document.getElementById("simCreativeImg");
+          const simTitle = document.getElementById("simActiveInterTitle");
+          const simCtaBtn = document.getElementById("simCtaBtn");
+          const simOrientTag = document.getElementById("simActiveOrientationTag");
+
+          // Determine creative URL based on current orientation
+          let creativeUrl = "";
+          if (simOrientation === "landscape") {
+            creativeUrl = interCmp.creative_interstitial_landscape_url || interCmp.creative_interstitial_url || interCmp.creative_interstitial_portrait_url || interCmp.creative_icon_url;
+            if (simOrientTag) simOrientTag.innerHTML = `🖥️ Landscape Graphic (16:9)`;
+          } else {
+            creativeUrl = interCmp.creative_interstitial_portrait_url || interCmp.creative_interstitial_url || interCmp.creative_interstitial_landscape_url || interCmp.creative_icon_url;
+            if (simOrientTag) simOrientTag.innerHTML = `📱 Portrait Graphic (9:16)`;
+          }
+
+          if (simCreativeImg) {
+            simCreativeImg.src = resolveImgUrl(creativeUrl);
+          }
+          if (simTitle) simTitle.textContent = interCmp.title || interCmp.name;
+          if (simCtaBtn) simCtaBtn.textContent = `▶ PLAY ${(interCmp.title || interCmp.name).toUpperCase().substring(0, 18)}`;
         }
-        if (simTitle) simTitle.textContent = iconCmp.title || iconCmp.name;
-      }
+      } else {
+        // Icon Campaigns tab
+        if (widget) widget.style.display = "flex";
+        if (interstitial) interstitial.style.display = "none";
+        if (controlsInter) controlsInter.style.display = "none";
+        if (controlsIcons) controlsIcons.style.display = "flex";
 
-      // Interstitial
-      const interstitials = allCampaigns.filter(c => c.ad_type !== "icon" && c.is_active !== false);
-      if (interstitials.length > 0) {
-        if (currentSimInterIndex >= interstitials.length) currentSimInterIndex = 0;
-        const interCmp = interstitials[currentSimInterIndex];
-        const simCreativeImg = document.getElementById("simCreativeImg");
-        if (simCreativeImg) simCreativeImg.src = resolveImgUrl(interCmp.creative_interstitial_url || interCmp.creative_icon_url);
+        const icons = getActiveIconCampaigns();
+        if (icons.length > 0) {
+          if (currentSimIconIndex >= icons.length) currentSimIconIndex = 0;
+          const iconCmp = icons[currentSimIconIndex];
+
+          const simIconImg = document.getElementById("simCornerIconImg");
+          const simPill = document.getElementById("simIconPill");
+          const simTitle = document.getElementById("simActiveIconTitle");
+
+          if (simIconImg) simIconImg.src = resolveImgUrl(iconCmp.creative_icon_url || iconCmp.creative_interstitial_portrait_url || iconCmp.creative_interstitial_url);
+          if (simPill) {
+            const shortTitle = (iconCmp.title || iconCmp.name || "MORE GAMES").split(/[: -]/)[0].toUpperCase();
+            simPill.textContent = shortTitle.substring(0, 10);
+          }
+          if (simTitle) simTitle.textContent = iconCmp.title || iconCmp.name;
+        }
       }
     }
 
@@ -2082,17 +2245,20 @@ This removes it from game clients.`)) {
       if (!cmp) return;
 
       if (cmp.ad_type === "icon") {
+        switchTab("icons");
         const icons = getActiveIconCampaigns();
         const found = icons.findIndex(c => c.id === id);
         if (found !== -1) currentSimIconIndex = found;
         updateSimulatorDisplay();
         showToast(`📱 Previewing "${cmp.title || cmp.name}" as corner icon ad.`);
       } else {
+        switchTab("campaigns");
         const interstitials = allCampaigns.filter(c => c.ad_type !== "icon");
         const found = interstitials.findIndex(c => c.id === id);
         if (found !== -1) currentSimInterIndex = found;
-        updateSimulatorDisplay();
         openSimInterstitial();
+        updateSimulatorDisplay();
+        showToast(`📱 Previewing "${cmp.title || cmp.name}" full-screen interstitial.`);
       }
     }
 
@@ -2104,10 +2270,28 @@ This removes it from game clients.`)) {
       }
     }
 
+    function reopenInterstitialSimulator() {
+      openSimInterstitial();
+      showToast("▶ Replaying full-screen interstitial ad.");
+    }
+
+    function cycleInterstitialSimulatorManual() {
+      const interstitials = allCampaigns.filter(c => c.ad_type !== "icon" && c.is_active !== false);
+      if (interstitials.length <= 1) {
+        showToast("Only 1 active interstitial campaign.");
+        return;
+      }
+      currentSimInterIndex = (currentSimInterIndex + 1) % interstitials.length;
+      openSimInterstitial();
+      updateSimulatorDisplay();
+      const nextCmp = interstitials[currentSimInterIndex];
+      showToast(`📱 Previewing "${nextCmp.title || nextCmp.name}" interstitial.`);
+    }
+
     function simulateAdClose() {
       const overlay = document.getElementById("simInterstitial");
       if (overlay) overlay.style.display = "none";
-      showToast("🎮 Interstitial closed. Corner icon ad active on screen.");
+      showToast("🎮 Interstitial dismissed. Tap 'Replay Ad' below to view again.");
     }
 
     function simulateIconAdClick() {
@@ -2177,6 +2361,9 @@ This removes it from game clients.`)) {
         if (btnPort) btnPort.classList.add("active");
         if (btnLand) btnLand.classList.remove("active");
       }
+
+      // Automatically swap graphic to match orientation
+      updateSimulatorDisplay();
     }
 
     // Tab Switching
@@ -2298,13 +2485,67 @@ This removes it from game clients.`)) {
       }).join("");
     }
 
+    let currentPickerTarget = "portrait";
+
     function pickFromAssets(targetField) {
-      const asset = targetField === "icon" ? KNOWN_ASSETS[0] : KNOWN_ASSETS[4];
-      if (asset) {
-        if (targetField === "icon") document.getElementById("cmpIconUrl").value = asset.path;
-        else document.getElementById("cmpCreativeUrl").value = asset.path;
-        showToast(`Selected asset: ${asset.path}`);
+      currentPickerTarget = targetField;
+      const modal = document.getElementById("assetPickerModal");
+      const title = document.getElementById("assetPickerTitle");
+      const icon = document.getElementById("assetPickerIcon");
+      const grid = document.getElementById("assetPickerGrid");
+
+      if (!modal || !grid) return;
+
+      if (targetField === "portrait") {
+        icon.textContent = "📱";
+        title.textContent = "Select Portrait (9:16 Vertical) Creative";
+      } else if (targetField === "landscape") {
+        icon.textContent = "🖥️";
+        title.textContent = "Select Landscape (16:9 Horizontal) Creative";
+      } else {
+        icon.textContent = "⭐";
+        title.textContent = "Select App Icon Graphic";
       }
+
+      grid.innerHTML = KNOWN_ASSETS.map(a => {
+        const isRecommended = (a.type === targetField);
+        return `
+          <div class="asset-card" style="border: 1px solid ${isRecommended ? 'var(--primary)' : 'var(--border-subtle)'}; cursor: pointer; padding: 0.5rem;" onclick="selectAssetForField('${a.path}')">
+            <div class="asset-preview" style="height: 90px; background: #000;">
+              <img src="${a.path}" alt="${a.name}" style="object-fit: contain; width: 100%; height: 100%;">
+            </div>
+            <div class="asset-info" style="padding: 0.4rem 0.2rem;">
+              <div class="asset-name" title="${a.name}" style="font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${a.name}</div>
+              <div style="font-size: 0.65rem; color: #f59e0b; margin-bottom: 0.35rem;">${a.dims}</div>
+              <button type="button" class="btn btn-sm ${isRecommended ? 'btn-primary' : 'btn-secondary'}" style="width: 100%; font-size: 0.68rem; padding: 0.2rem 0.4rem;">
+                Select
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      modal.style.display = "flex";
+    }
+
+    function closeAssetPickerModal() {
+      const modal = document.getElementById("assetPickerModal");
+      if (modal) modal.style.display = "none";
+    }
+
+    function selectAssetForField(path) {
+      if (currentPickerTarget === "icon") {
+        const input = document.getElementById("cmpIconUrl");
+        if (input) input.value = path;
+      } else if (currentPickerTarget === "portrait") {
+        const input = document.getElementById("cmpPortraitUrl");
+        if (input) input.value = path;
+      } else if (currentPickerTarget === "landscape") {
+        const input = document.getElementById("cmpLandscapeUrl");
+        if (input) input.value = path;
+      }
+      closeAssetPickerModal();
+      showToast(`Selected asset: ${path}`);
     }
 
     // Asset Upload Modal
