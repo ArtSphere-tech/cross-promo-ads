@@ -12,8 +12,8 @@
       "target_url_android": "https://play.google.com/store/apps/details?id=com.myFamilytown.playtogether.city.stories",
       "target_url_ios": "https://apps.apple.com/app/cooking-fun/id123456789",
       "target_url_web": "https://play.google.com/store/apps/details?id=com.myFamilytown.playtogether.city.stories",
-      "ad_type": "interstitial",
-      "ad_unit": "main_play_button",
+      "ad_type": "icon",
+      "ad_unit": "corner_main_page",
       "creative_interstitial_url": "creatives/1789658311820_Boy_lowering_wooden_bow_202609071548.jpeg",
       "creative_banner_url": "creatives/creative_cooking_banner.png",
       "creative_icon_url": "creatives/261c99a113c3_icon.png",
@@ -21,7 +21,8 @@
       "frequency_cap": 0,
       "is_active": true,
       "impressions": 1294,
-      "clicks": 182
+      "clicks": 182,
+      "rotation_seconds": 6
     },
     {
       "id": "cmp_icon_truck",
