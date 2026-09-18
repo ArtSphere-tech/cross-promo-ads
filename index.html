@@ -927,11 +927,12 @@
     .ctr-bar-fill { height: 100%; border-radius: 9999px; background: linear-gradient(90deg, #6366f1, #10b981); }
 
     /* Assets Grid */
-    .assets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.25rem; margin-top: 1rem; }
-    .asset-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; }
-    .asset-preview { height: 130px; background: #000; }
-    .asset-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .asset-info { padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); }
+    .assets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1.25rem; margin-top: 1rem; }
+    .asset-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s ease, border-color 0.2s ease; }
+    .asset-card:hover { border-color: rgba(99, 102, 241, 0.4); transform: translateY(-2px); }
+    .asset-preview { height: 135px; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; border-bottom: 1px solid var(--border-subtle); }
+    .asset-preview img { width: 100%; height: 100%; object-fit: contain; }
+    .asset-info { padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); display: flex; flex-direction: column; flex: 1; }
     .asset-name { font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .code-box {
@@ -1565,7 +1566,7 @@
     let isAdminAuthenticated = false;
 
     // Preset Assets
-    const KNOWN_ASSETS = [
+    let KNOWN_ASSETS = [
       { name: "creative_cooking_interstitial.png", path: "creatives/creative_cooking_interstitial.png", dims: "1080x1920 (9:16 Portrait)", type: "portrait" },
       { name: "creative_truck_interstitial.png", path: "creatives/creative_truck_interstitial.png", dims: "1080x1920 (9:16 Portrait)", type: "portrait" },
       { name: "creative_seaport_interstitial.png", path: "creatives/creative_seaport_interstitial.png", dims: "1080x1920 (9:16 Portrait)", type: "portrait" },
@@ -1649,6 +1650,7 @@
 
       renderMainCampaigns();
       renderIconCampaigns();
+      renderAssets();
     }
 
     function handleAuthClick() {
@@ -1716,25 +1718,79 @@
       });
     }
 
+    // Campaign Active Status Normalizer
+    function isCampaignActive(c) {
+      if (!c) return false;
+      if (c.is_active === false || c.is_active === "false" || c.is_active === 0) return false;
+      if (c.status === "paused" || c.status === "inactive") return false;
+      return true;
+    }
+
     // Data Loading
     async function loadCampaigns() {
-      const cacheBust = new Date().getTime();
-      const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}?_t=${cacheBust}`;
+      const token = getActiveToken();
+      let loaded = false;
 
-      try {
-        const res = await fetch(rawUrl);
-        if (res.ok) {
-          const data = await res.json();
-          allCampaigns = data.campaigns || [];
-          localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(allCampaigns));
-        } else {
-          fallbackLocalCache();
+      // 1. First Priority: Direct GitHub Contents REST API (0s CDN latency, real-time sync with repo)
+      if (token) {
+        try {
+          const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}&_t=${Date.now()}`, {
+            headers: { 
+              "Authorization": `token ${token}`, 
+              "Accept": "application/vnd.github.v3+json" 
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            repoSha = data.sha;
+            if (data.content) {
+              const decodedStr = decodeURIComponent(escape(atob(data.content.replace(/\s/g, ""))));
+              const parsed = JSON.parse(decodedStr);
+              if (parsed && Array.isArray(parsed.campaigns)) {
+                allCampaigns = parsed.campaigns.map(c => ({
+                  ...c,
+                  is_active: isCampaignActive(c)
+                }));
+                localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(allCampaigns));
+                loaded = true;
+              }
+            }
+          }
+        } catch (apiErr) {
+          console.warn("Direct GitHub API load failed, falling back to CDN:", apiErr);
         }
-      } catch (err) {
+      }
+
+      // 2. Fallback to raw CDN if GitHub API load was skipped or failed
+      if (!loaded) {
+        try {
+          const cacheBust = Date.now();
+          const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}?_t=${cacheBust}`;
+          const res = await fetch(rawUrl, { cache: "no-store" });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && Array.isArray(data.campaigns)) {
+              allCampaigns = data.campaigns.map(c => ({
+                ...c,
+                is_active: isCampaignActive(c)
+              }));
+              localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(allCampaigns));
+              loaded = true;
+            }
+          }
+        } catch (rawErr) {
+          console.warn("Raw CDN load failed:", rawErr);
+        }
+      }
+
+      // 3. Fallback to local storage if network is offline
+      if (!loaded) {
         fallbackLocalCache();
       }
 
-      fetchRepoSha();
+      // Fetch live creative assets from repository
+      fetchRepoAssets();
+
       updateKPIs();
       renderMainCampaigns();
       renderIconCampaigns();
@@ -1746,7 +1802,12 @@
     function fallbackLocalCache() {
       const cached = localStorage.getItem("admatrix_campaigns_cache");
       if (cached) {
-        try { allCampaigns = JSON.parse(cached); } catch(e){}
+        try { 
+          allCampaigns = JSON.parse(cached).map(c => ({
+            ...c,
+            is_active: isCampaignActive(c)
+          }));
+        } catch(e){}
       }
     }
 
@@ -1754,7 +1815,7 @@
       const token = getActiveToken();
       if (!token) return;
       try {
-        const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`, {
+        const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}&_t=${Date.now()}`, {
           headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
         });
         if (res.ok) {
@@ -1770,9 +1831,15 @@
       return getDecodedToken();
     }
 
-    // GitHub Sync
+    // GitHub Sync State & Queue
+    let isSaving = false;
+    let saveQueue = [];
+
     async function saveCampaignsToGitHub(updatedList, commitMsg = "Update campaigns via ArtSphere AdMatrix") {
-      allCampaigns = updatedList;
+      allCampaigns = updatedList.map(c => ({
+        ...c,
+        is_active: isCampaignActive(c)
+      }));
       localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(allCampaigns));
       updateKPIs();
       renderMainCampaigns();
@@ -1781,46 +1848,87 @@
 
       const token = getActiveToken();
       if (!token) {
-        showToast("⚠️ Saved locally, but GitHub write token missing.", true);
+        showToast("⚠️ Saved locally in browser storage (write token missing).", true);
         return;
       }
 
-      showToast("⏳ Synchronizing with GitHub Pages CDN...");
+      return new Promise((resolve) => {
+        saveQueue.push({ commitMsg, resolve });
+        processSaveQueue();
+      });
+    }
 
-      try {
-        if (!repoSha) {
-          const checkRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`, {
+    async function processSaveQueue() {
+      if (isSaving || saveQueue.length === 0) return;
+      isSaving = true;
+
+      const currentReq = saveQueue.pop();
+      const intermediateResolvers = saveQueue.splice(0, saveQueue.length);
+
+      const token = getActiveToken();
+      showToast("⏳ Synchronizing changes to GitHub Pages & Unity Clients...");
+
+      let attempts = 0;
+      let success = false;
+
+      while (attempts < 3 && !success) {
+        attempts++;
+        try {
+          // ALWAYS fetch the latest repo SHA right before saving to prevent 409 conflicts
+          const checkRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}&_t=${Date.now()}`, {
             headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
           });
           if (checkRes.ok) {
             const checkData = await checkRes.json();
             repoSha = checkData.sha;
           }
+
+          const payload = { success: true, campaigns: allCampaigns };
+          const contentStr = JSON.stringify(payload, null, 2);
+          const encodedContent = btoa(unescape(encodeURIComponent(contentStr)));
+
+          const bodyData = { 
+            message: currentReq.commitMsg, 
+            content: encodedContent, 
+            branch: GH_BRANCH 
+          };
+          if (repoSha) bodyData.sha = repoSha;
+
+          const putRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`, {
+            method: "PUT",
+            headers: { "Authorization": `token ${token}`, "Content-Type": "application/json", "Accept": "application/vnd.github.v3+json" },
+            body: JSON.stringify(bodyData)
+          });
+
+          if (putRes.ok) {
+            const resData = await putRes.json();
+            repoSha = resData.content?.sha || "";
+            success = true;
+            showToast("✅ Successfully deployed to GitHub Pages & Unity Clients!");
+          } else if (putRes.status === 409) {
+            console.warn(`Conflict detected (409), re-fetching latest SHA and retrying (${attempts}/3)...`);
+            repoSha = "";
+            await new Promise(r => setTimeout(r, 600));
+          } else {
+            console.error("Save error:", putRes.status, await putRes.text());
+            break;
+          }
+        } catch (err) {
+          console.error("Network issue during save:", err);
+          break;
         }
+      }
 
-        const payload = { success: true, campaigns: allCampaigns };
-        const contentStr = JSON.stringify(payload, null, 2);
-        const encodedContent = btoa(unescape(encodeURIComponent(contentStr)));
+      if (!success) {
+        showToast("⚠️ Changes saved in browser storage. (GitHub sync pending)", true);
+      }
 
-        const bodyData = { message: commitMsg, content: encodedContent, branch: GH_BRANCH };
-        if (repoSha) bodyData.sha = repoSha;
+      isSaving = false;
+      currentReq.resolve(success);
+      intermediateResolvers.forEach(r => r.resolve(success));
 
-        const putRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`, {
-          method: "PUT",
-          headers: { "Authorization": `token ${token}`, "Content-Type": "application/json", "Accept": "application/vnd.github.v3+json" },
-          body: JSON.stringify(bodyData)
-        });
-
-        if (putRes.ok) {
-          const resData = await putRes.json();
-          repoSha = resData.content?.sha || "";
-          showToast("✅ Successfully deployed to GitHub Pages & Unity Clients!");
-        } else {
-          showToast("⚠️ Changes saved in browser storage.", true);
-          repoSha = "";
-        }
-      } catch (err) {
-        showToast("⚠️ Network issue: changes saved in browser storage.", true);
+      if (saveQueue.length > 0) {
+        processSaveQueue();
       }
     }
 
@@ -1840,7 +1948,8 @@
         if (!matchesSearch) return false;
 
         if (currentFilter === "all") return true;
-        if (currentFilter === "active") return c.is_active !== false;
+        if (currentFilter === "active") return isCampaignActive(c);
+        if (currentFilter === "paused") return !isCampaignActive(c);
         if (currentFilter === "interstitial") return c.ad_type === "interstitial" || c.ad_type === "both";
         if (currentFilter === "main_play_button") return c.ad_unit === "main_play_button" || c.ad_unit === "all";
         return true;
@@ -1876,7 +1985,8 @@
         if (!matchesSearch) return false;
 
         if (currentIconFilter === "all") return true;
-        if (currentIconFilter === "active") return c.is_active !== false;
+        if (currentIconFilter === "active") return isCampaignActive(c);
+        if (currentIconFilter === "paused") return !isCampaignActive(c);
         if (currentIconFilter === "corner_main_page") return c.ad_unit === "corner_main_page" || c.ad_unit === "all";
         if (currentIconFilter === "corner_selection_page") return c.ad_unit === "corner_selection_page" || c.ad_unit === "all";
         return true;
@@ -1899,7 +2009,7 @@
     function renderCardHtml(c, isIconMode) {
       const realIndex = allCampaigns.findIndex(item => item.id === c.id);
       const ctr = c.impressions > 0 ? ((c.clicks / c.impressions) * 100).toFixed(1) : "0.0";
-      const isLive = c.is_active !== false;
+      const isLive = isCampaignActive(c);
       const hasPortrait = !!(c.creative_interstitial_portrait_url || (!isIconMode && c.creative_interstitial_url));
       const hasLandscape = !!(c.creative_interstitial_landscape_url);
       const imgUrl = isIconMode 
@@ -1957,7 +2067,7 @@
 
             <div class="campaign-card-actions">
               <!-- Switch -->
-              <label class="switch ${isAdminAuthenticated ? "" : "locked"}" title="${isAdminAuthenticated ? "Toggle Active Status" : "🔒 Admin Login Required"}">
+              <label class="switch ${isAdminAuthenticated ? "" : "locked"}" title="${isAdminAuthenticated ? (isLive ? "Click to Pause Ad" : "Click to Activate Ad") : "🔒 Admin Login Required"}">
                 <input type="checkbox" ${isLive ? "checked" : ""} onchange="handleToggleActive('${c.id}', this.checked, this)">
                 <span class="slider"></span>
               </label>
@@ -1994,8 +2104,8 @@
       const cmp = allCampaigns.find(c => c.id === id);
       if (!cmp) return;
 
-      cmp.is_active = newStatus;
-      const statusText = newStatus ? "Activated (LIVE)" : "Paused";
+      cmp.is_active = Boolean(newStatus);
+      const statusText = cmp.is_active ? "Activated (LIVE)" : "Paused";
       showToast(`⚡ "${cmp.title || cmp.name}" is now ${statusText}.`);
       saveCampaignsToGitHub(allCampaigns, `Toggle campaign ${cmp.name} to ${statusText}`);
     }
@@ -2031,7 +2141,7 @@
 
       document.getElementById("cmpRotationSeconds").value = editData ? (editData.rotation_seconds || 6) : "6";
       document.getElementById("cmpPriority").value = editData ? (editData.priority || 50) : "50";
-      document.getElementById("cmpStatus").value = (editData && editData.is_active === false) ? "false" : "true";
+      document.getElementById("cmpStatus").value = (editData && !isCampaignActive(editData)) ? "false" : "true";
 
       handleAdTypeChange(document.getElementById("cmpAdType").value);
       document.getElementById("campaignModal").style.display = "flex";
@@ -2145,7 +2255,7 @@ This removes it from game clients.`)) {
     }
 
     function getActiveIconCampaigns() {
-      return allCampaigns.filter(c => c.is_active !== false && (c.ad_type === "icon" || c.creative_icon_url));
+      return allCampaigns.filter(c => isCampaignActive(c) && (c.ad_type === "icon" || c.creative_icon_url));
     }
 
     function cycleIconSimulatorManual() {
@@ -2188,7 +2298,7 @@ This removes it from game clients.`)) {
         if (controlsInter) controlsInter.style.display = "flex";
         if (controlsIcons) controlsIcons.style.display = "none";
 
-        const interstitials = allCampaigns.filter(c => c.ad_type !== "icon" && c.is_active !== false);
+        const interstitials = allCampaigns.filter(c => c.ad_type !== "icon" && isCampaignActive(c));
         if (interstitials.length > 0) {
           if (currentSimInterIndex >= interstitials.length) currentSimInterIndex = 0;
           const interCmp = interstitials[currentSimInterIndex];
@@ -2276,7 +2386,7 @@ This removes it from game clients.`)) {
     }
 
     function cycleInterstitialSimulatorManual() {
-      const interstitials = allCampaigns.filter(c => c.ad_type !== "icon" && c.is_active !== false);
+      const interstitials = allCampaigns.filter(c => c.ad_type !== "icon" && isCampaignActive(c));
       if (interstitials.length <= 1) {
         showToast("Only 1 active interstitial campaign.");
         return;
@@ -2420,7 +2530,7 @@ This removes it from game clients.`)) {
       allCampaigns.forEach(c => {
         totalImp += (c.impressions || 0);
         totalClicks += (c.clicks || 0);
-        if (c.ad_type === "icon" && c.is_active !== false) iconCount++;
+        if (c.ad_type === "icon" && isCampaignActive(c)) iconCount++;
       });
 
       const overallCtr = totalImp > 0 ? ((totalClicks / totalImp) * 100).toFixed(2) : "0.00";
@@ -2463,26 +2573,196 @@ This removes it from game clients.`)) {
       }).join("");
     }
 
+    // Creative Assets Synchronization & Management
+    async function fetchRepoAssets() {
+      const token = getActiveToken();
+      if (!token) return;
+
+      try {
+        const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/creatives?ref=${GH_BRANCH}&_t=${Date.now()}`, {
+          headers: { 
+            "Authorization": `token ${token}`, 
+            "Accept": "application/vnd.github.v3+json" 
+          }
+        });
+
+        if (res.ok) {
+          const files = await res.json();
+          if (Array.isArray(files)) {
+            const fetched = files.filter(f => f.type === "file").map(f => {
+              const nameLower = f.name.toLowerCase();
+              let type = "custom";
+              let dims = "Custom Graphic";
+
+              if (nameLower.includes("portrait") || nameLower.includes("vertical") || nameLower.includes("9_16") || nameLower.includes("9x16") || nameLower.includes("bow")) {
+                type = "portrait";
+                dims = "1080x1920 (9:16 Portrait)";
+              } else if (nameLower.includes("landscape") || nameLower.includes("horizontal") || nameLower.includes("16_9") || nameLower.includes("16x9") || nameLower.includes("chatgpt") || nameLower.includes("1789658")) {
+                type = "landscape";
+                dims = "1920x1080 (16:9 Landscape)";
+              } else if (nameLower.includes("icon") || nameLower.includes("logo") || nameLower.includes("square")) {
+                type = "icon";
+                dims = "Square Icon (1:1)";
+              } else if (nameLower.includes("banner")) {
+                type = "banner";
+                dims = "Banner (320x50)";
+              }
+
+              const sizeKb = f.size ? (f.size > 1048576 ? (f.size / 1048576).toFixed(1) + " MB" : Math.round(f.size / 1024) + " KB") : "";
+
+              return {
+                name: f.name,
+                path: f.path || `creatives/${f.name}`,
+                sha: f.sha,
+                dims: dims,
+                type: type,
+                sizeFormatted: sizeKb
+              };
+            });
+
+            if (fetched.length > 0) {
+              KNOWN_ASSETS = fetched;
+              renderAssets();
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("fetchRepoAssets error:", err);
+      }
+    }
+
     function renderAssets() {
       const grid = document.getElementById("assetsGrid");
       if (!grid) return;
 
-      grid.innerHTML = KNOWN_ASSETS.map(a => {
+      if (KNOWN_ASSETS.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: var(--bg-card); border-radius: 12px; border: 1px dashed var(--border-subtle);">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎨</div>
+            <h3 style="font-size: 1.1rem; font-weight: 700;">No Creative Assets Found</h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.25rem;">Click "Upload New Asset" to add graphics to your CDN library.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = KNOWN_ASSETS.map((a, idx) => {
         return `
-          <div class="asset-card">
+          <div class="asset-card" id="assetCard_${idx}">
             <div class="asset-preview">
-              <img src="${a.path}" alt="${a.name}" onerror="this.src='creatives/creative_truck_icon.png'">
+              <img src="${a.path}" alt="${escapeHtml(a.name)}" onerror="this.src='creatives/creative_truck_icon.png'">
             </div>
             <div class="asset-info">
-              <div class="asset-name" title="${a.name}">${a.name}</div>
-              <div style="font-size: 0.7rem; color: #f59e0b;">${a.dims}</div>
-              <button class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 0.5rem;" onclick="copyToClipboard('${a.path}')">
-                Copy Path
-              </button>
+              <div class="asset-name" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</div>
+              <div style="font-size: 0.7rem; color: #f59e0b; margin-bottom: 0.5rem;">
+                ${escapeHtml(a.dims)} ${a.sizeFormatted ? '• ' + a.sizeFormatted : ''}
+              </div>
+              <div style="display: flex; gap: 0.4rem; margin-top: auto;">
+                <button class="btn btn-secondary btn-sm" style="flex: 1; padding: 0.35rem;" onclick="copyAssetPathByIndex(${idx})" title="Copy Graphic Path">
+                  📋 Copy
+                </button>
+                <button class="btn btn-danger btn-sm" style="flex: 1; padding: 0.35rem;" onclick="handleDeleteAssetByIndex(${idx})" title="${isAdminAuthenticated ? 'Delete Graphic from CDN' : '🔒 Admin Login Required'}">
+                  🗑️ Delete
+                </button>
+              </div>
             </div>
           </div>
         `;
       }).join("");
+    }
+
+    function copyAssetPathByIndex(idx) {
+      const a = KNOWN_ASSETS[idx];
+      if (a && a.path) copyToClipboard(a.path);
+    }
+
+    function handleDeleteAssetByIndex(idx) {
+      const a = KNOWN_ASSETS[idx];
+      if (!a) return;
+      handleDeleteAsset(a.path, a.name, a.sha);
+    }
+
+    async function handleDeleteAsset(path, name, sha) {
+      requireAdmin("delete creative assets", async () => {
+        // Check if graphic is referenced in any active or paused campaign
+        const usedIn = allCampaigns.filter(c => 
+          c.creative_icon_url === path ||
+          c.creative_interstitial_portrait_url === path ||
+          c.creative_interstitial_landscape_url === path ||
+          c.creative_interstitial_url === path ||
+          c.creative_banner_url === path ||
+          (c.creative_icon_url && (c.creative_icon_url.endsWith("/" + name) || c.creative_icon_url === name)) ||
+          (c.creative_interstitial_portrait_url && (c.creative_interstitial_portrait_url.endsWith("/" + name) || c.creative_interstitial_portrait_url === name)) ||
+          (c.creative_interstitial_landscape_url && (c.creative_interstitial_landscape_url.endsWith("/" + name) || c.creative_interstitial_landscape_url === name)) ||
+          (c.creative_interstitial_url && (c.creative_interstitial_url.endsWith("/" + name) || c.creative_interstitial_url === name))
+        );
+
+        if (usedIn.length > 0) {
+          const names = usedIn.map(c => `• "${c.title || c.name}"`).join("\n");
+          const ok = confirm(
+            `⚠️ WARNING: Graphic "${name}" is actively linked to ${usedIn.length} campaign(s):\n${names}\n\nDeleting this graphic will cause missing images in live game ads!\n\nAre you sure you want to permanently delete it from the repository?`
+          );
+          if (!ok) return;
+        } else {
+          const ok = confirm(
+            `🗑️ Delete Graphic: "${name}"\n\nThis will permanently remove the graphic file from the GitHub repository and CDN.\n\nProceed with deletion?`
+          );
+          if (!ok) return;
+        }
+
+        const token = getActiveToken();
+        if (!token) {
+          showToast("⚠️ Missing GitHub authentication token.", true);
+          return;
+        }
+
+        showToast(`⏳ Deleting graphic "${name}" from repository...`);
+
+        let targetSha = sha;
+        if (!targetSha) {
+          try {
+            const getRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}&_t=${Date.now()}`, {
+              headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
+            });
+            if (getRes.ok) {
+              const fileData = await getRes.json();
+              targetSha = fileData.sha;
+            }
+          } catch (e) {}
+        }
+
+        if (!targetSha) {
+          showToast(`⚠️ Could not retrieve file SHA for "${name}".`, true);
+          return;
+        }
+
+        try {
+          const delRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+            method: "DELETE",
+            headers: {
+              "Authorization": `token ${token}`,
+              "Content-Type": "application/json",
+              "Accept": "application/vnd.github.v3+json"
+            },
+            body: JSON.stringify({
+              message: `Delete graphic ${name} via ArtSphere Studio Dashboard`,
+              sha: targetSha,
+              branch: GH_BRANCH
+            })
+          });
+
+          if (delRes.ok) {
+            showToast(`✅ Graphic "${name}" deleted from repository!`);
+            KNOWN_ASSETS = KNOWN_ASSETS.filter(a => a.path !== path && a.name !== name);
+            renderAssets();
+          } else {
+            const errData = await delRes.json().catch(() => ({}));
+            showToast(`⚠️ Delete failed: ${errData.message || "GitHub API error"}`, true);
+          }
+        } catch (err) {
+          showToast("⚠️ Network issue during graphic deletion.", true);
+        }
+      });
     }
 
     let currentPickerTarget = "portrait";
@@ -2507,16 +2787,16 @@ This removes it from game clients.`)) {
         title.textContent = "Select App Icon Graphic";
       }
 
-      grid.innerHTML = KNOWN_ASSETS.map(a => {
+      grid.innerHTML = KNOWN_ASSETS.map((a, idx) => {
         const isRecommended = (a.type === targetField);
         return `
-          <div class="asset-card" style="border: 1px solid ${isRecommended ? 'var(--primary)' : 'var(--border-subtle)'}; cursor: pointer; padding: 0.5rem;" onclick="selectAssetForField('${a.path}')">
+          <div class="asset-card" style="border: 1px solid ${isRecommended ? 'var(--primary)' : 'var(--border-subtle)'}; cursor: pointer; padding: 0.5rem;" onclick="selectAssetForFieldByIndex(${idx})">
             <div class="asset-preview" style="height: 90px; background: #000;">
-              <img src="${a.path}" alt="${a.name}" style="object-fit: contain; width: 100%; height: 100%;">
+              <img src="${a.path}" alt="${escapeHtml(a.name)}" style="object-fit: contain; width: 100%; height: 100%;" onerror="this.src='creatives/creative_truck_icon.png'">
             </div>
             <div class="asset-info" style="padding: 0.4rem 0.2rem;">
-              <div class="asset-name" title="${a.name}" style="font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${a.name}</div>
-              <div style="font-size: 0.65rem; color: #f59e0b; margin-bottom: 0.35rem;">${a.dims}</div>
+              <div class="asset-name" title="${escapeHtml(a.name)}" style="font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(a.name)}</div>
+              <div style="font-size: 0.65rem; color: #f59e0b; margin-bottom: 0.35rem;">${escapeHtml(a.dims)}</div>
               <button type="button" class="btn btn-sm ${isRecommended ? 'btn-primary' : 'btn-secondary'}" style="width: 100%; font-size: 0.68rem; padding: 0.2rem 0.4rem;">
                 Select
               </button>
@@ -2526,6 +2806,12 @@ This removes it from game clients.`)) {
       }).join("");
 
       modal.style.display = "flex";
+    }
+
+    function selectAssetForFieldByIndex(idx) {
+      const a = KNOWN_ASSETS[idx];
+      if (!a) return;
+      selectAssetForField(a.path);
     }
 
     function closeAssetPickerModal() {
@@ -2604,8 +2890,17 @@ This removes it from game clients.`)) {
           });
 
           if (res.ok) {
+            const resData = await res.json();
+            const newSha = resData.content?.sha || "";
             showToast(`✅ Asset uploaded! Path: ${targetPath}`);
-            KNOWN_ASSETS.unshift({ name: filename, path: targetPath, dims: "Custom Graphic", type: "custom" });
+            KNOWN_ASSETS.unshift({ 
+              name: filename, 
+              path: targetPath, 
+              sha: newSha,
+              dims: "Custom Graphic", 
+              type: "custom",
+              sizeFormatted: `${(fileInput.files[0].size / 1024).toFixed(0)} KB`
+            });
             renderAssets();
             closeAssetUploadModal();
           } else {
