@@ -39,7 +39,7 @@
       "target_url_web": "https://play.google.com/store/apps/details?id=com.myFamilytown.Shopping.mall&hl=en",
       "ad_type": "icon",
       "ad_unit": "corner_main_page",
-      "creative_icon_url": "creatives/shopping mall",
+      "creative_icon_url": "creatives/shopping mall icon",
       "creative_interstitial_url": "creatives/creative_cooking_interstitial.png",
       "creative_interstitial_portrait_url": "creatives/creative_cooking_interstitial.png",
       "creative_interstitial_landscape_url": "creatives/1789658311820_Boy_lowering_wooden_bow_202609071548.jpeg",
@@ -47,7 +47,7 @@
       "rotation_seconds": 6,
       "priority": 50,
       "frequency_cap": 0,
-      "is_active": false,
+      "is_active": true,
       "impressions": 0,
       "clicks": 0
     }
