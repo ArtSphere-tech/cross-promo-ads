@@ -1048,7 +1048,7 @@
       <div class="header-actions">
         <div class="system-status">
           <span class="status-dot"></span>
-          <span id="sysStatusText">CDN SYNCED • 34ms</span>
+          <span id="sysStatusText">Loading campaign feed…</span>
         </div>
 
         <button id="btnAuthTrigger" class="btn btn-secondary" onclick="handleAuthClick()">
@@ -1096,17 +1096,17 @@
         <div class="metric-card">
           <div class="metric-header"><span>Total Impressions</span><span>👁️</span></div>
           <div class="metric-value" id="kpiImpressions">3,764</div>
-          <div class="metric-sub"><span>↑ 16.4%</span><span>vs previous 7d</span></div>
+          <div class="metric-sub neutral">Published feed data</div>
         </div>
         <div class="metric-card success">
           <div class="metric-header"><span>Total Player Clicks</span><span>🎯</span></div>
           <div class="metric-value" id="kpiClicks">530</div>
-          <div class="metric-sub"><span>↑ 22.1%</span><span>store conversions</span></div>
+          <div class="metric-sub neutral">Published feed data</div>
         </div>
         <div class="metric-card">
           <div class="metric-header"><span>Studio Overall CTR</span><span>🔥</span></div>
           <div class="metric-value" id="kpiCtr">14.08%</div>
-          <div class="metric-sub"><span>★ Industry benchmark: 4.5%</span></div>
+          <div class="metric-sub neutral">Published feed data</div>
         </div>
         <div class="metric-card gold">
           <div class="metric-header"><span>Rotating Games</span><span>⭐</span></div>
@@ -1458,6 +1458,10 @@
         <div class="form-group">
           <label class="form-label">Google Play Store URL</label>
           <input type="url" id="cmpTargetUrl" class="form-input" placeholder="https://play.google.com/store/apps/details?id=..." required>
+          <label class="form-label" for="cmpIosUrl">iOS store URL</label>
+          <input type="url" id="cmpIosUrl" class="form-input" placeholder="https://apps.apple.com/…">
+          <label class="form-label" for="cmpWebUrl">Web destination URL</label>
+          <input type="url" id="cmpWebUrl" class="form-input">
         </div>
 
         <!-- App Icon Graphic -->
@@ -1543,11 +1547,11 @@
         <p id="assetUploadStatus" role="status" aria-live="polite"></p>
         <div class="form-group">
           <label class="form-label">Select Graphic File (App Icon or Interstitial)</label>
-          <input type="file" id="assetFileInput" class="form-input" accept="image/*" required onchange="previewUploadImage(event)">
+          <input type="file" id="assetFileInput" class="form-input" accept="image/png,image/jpeg,image/webp,image/gif" required onchange="previewUploadImage(event)">
         </div>
 
         <div id="uploadPreviewBox" style="display: none; margin-bottom: 1rem; text-align: center;">
-          <img id="uploadPreviewImg" src="" style="max-height: 160px; max-width: 100%; border-radius: 10px; border: 1px solid var(--border-subtle);" alt="Preview">
+          <img id="uploadPreviewImg" onload="showUploadDimensions(this)" style="max-height: 160px; max-width: 100%; border-radius: 10px; border: 1px solid var(--border-subtle);" alt="Preview">
           <div id="uploadFileInfo" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;"></div>
         </div>
 
@@ -1813,11 +1817,13 @@
 
     // Load the same public feed that existing game clients use.
     async function loadCampaigns() {
+      const status = document.getElementById("sysStatusText");
       try {
         const response = await request(GH_FILE, { cache: "no-cache" });
         if (!response.ok) throw new Error(`Campaign feed HTTP ${response.status}.`);
         const data = await response.json();
         if (!Array.isArray(data.campaigns)) throw new Error("Invalid campaign feed.");
+        status.textContent = "Published feed loaded";
         allCampaigns = data.campaigns.map(c => ({ ...c, is_active: isCampaignActive(c) }));
         try { localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(allCampaigns)); } catch {}
       } catch (error) {
@@ -1825,6 +1831,7 @@
           const cached = JSON.parse(localStorage.getItem("admatrix_campaigns_cache"));
           if (Array.isArray(cached)) allCampaigns = cached;
         } catch {}
+        status.textContent = "Published feed unavailable";
         showToast("Could not refresh the campaign feed. " + error.message, true);
       }
 
@@ -1906,6 +1913,22 @@
             if (!Array.isArray(feed.campaigns)) throw new Error("The published campaign feed is invalid.");
             const index = feed.campaigns.findIndex(campaign => campaign.id === change.id);
             if (change.type !== "create" && index < 0) throw new Error("This campaign was removed. Reload the dashboard.");
+            const before = feed.campaigns[index];
+            const candidate = { ...before, ...change.fields };
+            if (change.type === "create" || (change.type === "edit" && isCampaignActive(candidate) &&
+                (!isCampaignActive(before) || Object.keys(change.fields).some(key => key.startsWith("creative_"))))) {
+              const images = [candidate.creative_icon_url, candidate.creative_interstitial_url,
+                candidate.creative_interstitial_portrait_url, candidate.creative_interstitial_landscape_url];
+              if (!candidate.creative_icon_url || (candidate.ad_type !== "icon" && !images.slice(1).some(Boolean))) {
+                throw new Error("Assign the required creative images before publishing.");
+              }
+              await Promise.all([...new Set(images.filter(Boolean))].map(path =>
+                isCampaignActive(candidate) || /^https?:/i.test(path)
+                  ? inspectCreative(path)
+                  : readContent(path, token).then(response => {
+                    if (!response.ok) throw new Error(`Creative does not exist in GitHub: ${path}`);
+                  })));
+            }
             if (change.type === "create") feed.campaigns.unshift(change.fields);
             else if (change.type === "delete") feed.campaigns.splice(index, 1);
             else Object.assign(feed.campaigns[index], change.fields);
@@ -1920,6 +1943,7 @@
             renderMainCampaigns();
             renderIconCampaigns();
             renderAnalytics();
+            updateSimulatorDisplay();
             showToast("Campaign change committed to GitHub.");
             return;
           }
@@ -2129,17 +2153,19 @@
       document.getElementById("cmpGameId").value = editData ? (editData.target_game_id || "") : "";
       document.getElementById("cmpAdType").value = isIcon ? "icon" : (editData ? editData.ad_type : "interstitial");
       document.getElementById("cmpAdUnit").value = editData ? (editData.ad_unit || (isIcon ? "corner_main_page" : "main_play_button")) : (isIcon ? "corner_main_page" : "main_play_button");
-      document.getElementById("cmpTargetUrl").value = editData ? (editData.target_url || editData.target_url_android || "") : "";
+      document.getElementById("cmpTargetUrl").value = editData ? (editData.target_url_android || editData.target_url || "") : "";
+      document.getElementById("cmpIosUrl").value = editData?.target_url_ios || "";
+      document.getElementById("cmpWebUrl").value = editData?.target_url_web || "";
       document.getElementById("cmpIconUrl").value = editData ? (editData.creative_icon_url || "") : "";
       
       // Dual Orientation Creatives
-      document.getElementById("cmpPortraitUrl").value = editData ? (editData.creative_interstitial_portrait_url || editData.creative_interstitial_url || "") : "creatives/creative_cooking_interstitial.png";
-      document.getElementById("cmpLandscapeUrl").value = editData ? (editData.creative_interstitial_landscape_url || "") : "creatives/1789658311820_Boy_lowering_wooden_bow_202609071548.jpeg";
+      document.getElementById("cmpPortraitUrl").value = editData ? (editData.creative_interstitial_portrait_url || editData.creative_interstitial_url || "") : "";
+      document.getElementById("cmpLandscapeUrl").value = editData ? (editData.creative_interstitial_landscape_url || "") : "";
       document.getElementById("cmpCreativeUrl").value = editData ? (editData.creative_interstitial_url || "") : "";
 
       document.getElementById("cmpRotationSeconds").value = editData ? (editData.rotation_seconds || 6) : "6";
       document.getElementById("cmpPriority").value = editData ? (editData.priority || 50) : "50";
-      document.getElementById("cmpStatus").value = (editData && !isCampaignActive(editData)) ? "false" : "true";
+      document.getElementById("cmpStatus").value = (editData && isCampaignActive(editData)) ? "true" : "false";
 
       handleAdTypeChange(document.getElementById("cmpAdType").value);
       document.getElementById("campaignModal").style.display = "flex";
@@ -2175,6 +2201,8 @@
       const adType = document.getElementById("cmpAdType").value;
       const adUnit = document.getElementById("cmpAdUnit").value;
       const targetUrl = document.getElementById("cmpTargetUrl").value.trim();
+      const iosUrl = document.getElementById("cmpIosUrl").value.trim();
+      const webUrl = document.getElementById("cmpWebUrl").value.trim();
       const iconUrl = document.getElementById("cmpIconUrl").value.trim();
       const portraitUrl = document.getElementById("cmpPortraitUrl").value.trim();
       const landscapeUrl = document.getElementById("cmpLandscapeUrl").value.trim();
@@ -2188,7 +2216,7 @@
 
       const fields = {
         name, title: name, target_game_id: gameId, ad_type: adType, ad_unit: adUnit,
-        target_url: targetUrl, creative_icon_url: iconUrl,
+        target_url: targetUrl, target_url_android: targetUrl, target_url_ios: iosUrl, target_url_web: webUrl, creative_icon_url: iconUrl,
         creative_interstitial_url: creativeUrl,
         creative_interstitial_portrait_url: portraitUrl || creativeUrl,
         creative_interstitial_landscape_url: landscapeUrl,
@@ -2199,13 +2227,21 @@
         showToast("This campaign was removed. Reload the dashboard.", true);
         return;
       }
+      const status = document.getElementById("campaignSaveStatus");
+      if (!targetUrl || [targetUrl, iosUrl, webUrl].some(url => url && !/^https?:\/\//i.test(url))) {
+        status.textContent = "Enter a valid HTTP or HTTPS store URL.";
+        return;
+      }
+      if (!original && (!iconUrl || (adType !== "icon" && !portraitUrl && !landscapeUrl && !creativeUrl))) {
+        status.textContent = "Select an icon and at least one interstitial creative for interstitial ads.";
+        return;
+      }
       const campaignId = id || "cmp_" + (adType === "icon" ? "icon_" : "") + crypto.randomUUID();
       let change;
       if (original) {
-        if (targetUrl !== (original.target_url || original.target_url_android || "")) {
-          Object.assign(fields, { target_url_android: targetUrl, target_url_web: targetUrl });
-        } else {
+        if (targetUrl === (original.target_url_android || original.target_url || "")) {
           delete fields.target_url;
+          delete fields.target_url_android;
         }
         const edits = Object.fromEntries(Object.entries(fields).filter(([key, value]) => original[key] !== value));
         change = { type: "edit", id: campaignId, fields: edits };
@@ -2213,13 +2249,12 @@
         change = { type: "create", id: campaignId, fields: {
           ...fields, id: campaignId, platform: "all",
           description: "Download and experience our studio title today!",
-          target_url_android: targetUrl, target_url_ios: targetUrl, target_url_web: targetUrl,
+
           creative_banner_url: iconUrl, frequency_cap: 0, impressions: 0, clicks: 0
         } };
       }
 
       const button = e.currentTarget.querySelector('[type="submit"]');
-      const status = document.getElementById("campaignSaveStatus");
       button.disabled = true;
       status.textContent = "Saving campaign to GitHub…";
       try {
@@ -2271,12 +2306,24 @@
       }, 6000);
     }
 
+    let explicitPreviewId = null;
+    let displayedPreviewId = null;
+
+    function selectSimulatorCampaign(campaigns, fallbackIndex, isIcon) {
+      const explicit = allCampaigns.find(c => c.id === explicitPreviewId && (c.ad_type === "icon") === isIcon);
+      const campaign = explicit || campaigns[fallbackIndex] || campaigns[0];
+      displayedPreviewId = campaign?.id || null;
+      return campaign;
+    }
+
     function getActiveIconCampaigns() {
       return allCampaigns.filter(c => isCampaignActive(c) && (c.ad_type === "icon" || c.creative_icon_url));
     }
 
     function cycleIconSimulatorManual() {
+      explicitPreviewId = null;
       cycleIconSimulator();
+      updateSimulatorDisplay();
       showToast("🔄 Cycled to next icon game in rotation.");
     }
 
@@ -2332,7 +2379,7 @@
     }
 
     function cycleIconSimulator() {
-      if (iconDismissTimeout) return;
+      if (iconDismissTimeout || explicitPreviewId) return;
       const icons = getActiveIconCampaigns();
       if (icons.length <= 1) return;
 
@@ -2379,9 +2426,8 @@
         if (controlsIcons) controlsIcons.style.display = "none";
 
         const interstitials = allCampaigns.filter(c => c.ad_type !== "icon" && isCampaignActive(c));
-        if (interstitials.length > 0) {
-          if (currentSimInterIndex >= interstitials.length) currentSimInterIndex = 0;
-          const interCmp = interstitials[currentSimInterIndex];
+        const interCmp = selectSimulatorCampaign(interstitials, currentSimInterIndex, false);
+        if (interCmp) {
 
           const simCreativeImg = document.getElementById("simCreativeImg");
           const simTitle = document.getElementById("simActiveInterTitle");
@@ -2403,6 +2449,11 @@
           }
           if (simTitle) simTitle.textContent = interCmp.title || interCmp.name;
           if (simCtaBtn) simCtaBtn.textContent = `▶ PLAY ${(interCmp.title || interCmp.name).toUpperCase().substring(0, 18)}`;
+        } else {
+          if (interstitial) interstitial.style.display = "none";
+          if (topBanner) topBanner.style.display = "flex";
+          const title = document.getElementById("simActiveInterTitle");
+          if (title) title.textContent = "No campaign selected";
         }
       } else {
         // Icon Campaigns tab
@@ -2418,9 +2469,9 @@
         }
 
         const icons = getActiveIconCampaigns();
-        if (icons.length > 0) {
-          if (currentSimIconIndex >= icons.length) currentSimIconIndex = 0;
-          const iconCmp = icons[currentSimIconIndex];
+        const iconCmp = selectSimulatorCampaign(icons, currentSimIconIndex, true);
+        if (widget && !iconCmp) widget.style.display = "none";
+        if (iconCmp) {
 
           const simIconImg = document.getElementById("simCornerIconImg");
           const simPill = document.getElementById("simIconPill");
@@ -2432,6 +2483,9 @@
             simPill.textContent = shortTitle.substring(0, 10);
           }
           if (simTitle) simTitle.textContent = iconCmp.title || iconCmp.name;
+        } else {
+          const title = document.getElementById("simActiveIconTitle");
+          if (title) title.textContent = "No campaign selected";
         }
       }
     }
@@ -2440,22 +2494,11 @@
       const cmp = allCampaigns.find(c => c.id === id);
       if (!cmp) return;
 
-      if (cmp.ad_type === "icon") {
-        switchTab("icons");
-        const icons = getActiveIconCampaigns();
-        const found = icons.findIndex(c => c.id === id);
-        if (found !== -1) currentSimIconIndex = found;
-        updateSimulatorDisplay();
-        showToast(`📱 Previewing "${cmp.title || cmp.name}" as corner icon ad.`);
-      } else {
-        switchTab("campaigns");
-        const interstitials = allCampaigns.filter(c => c.ad_type !== "icon");
-        const found = interstitials.findIndex(c => c.id === id);
-        if (found !== -1) currentSimInterIndex = found;
-        openSimInterstitial();
-        updateSimulatorDisplay();
-        showToast(`📱 Previewing "${cmp.title || cmp.name}" full-screen interstitial.`);
-      }
+      explicitPreviewId = id;
+      switchTab(cmp.ad_type === "icon" ? "icons" : "campaigns");
+      if (cmp.ad_type !== "icon") openSimInterstitial();
+      updateSimulatorDisplay();
+      showToast(`Previewing "${cmp.title || cmp.name}".`);
     }
 
     function openSimInterstitial() {
@@ -2476,10 +2519,11 @@
 
     function cycleInterstitialSimulatorManual() {
       const interstitials = allCampaigns.filter(c => c.ad_type !== "icon" && isCampaignActive(c));
-      if (interstitials.length <= 1) {
-        showToast("Only 1 active interstitial campaign.");
+      if (!interstitials.length) {
+        showToast("No active interstitial campaigns.");
         return;
       }
+      explicitPreviewId = null;
       currentSimInterIndex = (currentSimInterIndex + 1) % interstitials.length;
       openSimInterstitial();
       updateSimulatorDisplay();
@@ -2497,31 +2541,17 @@
     }
 
     function simulateIconAdClick() {
-      const icons = getActiveIconCampaigns();
-      if (icons.length === 0) return;
-      const cmp = icons[currentSimIconIndex];
-      cmp.clicks = (cmp.clicks || 0) + 1;
-      updateKPIs();
-      renderIconCampaigns();
-      renderAnalytics();
-
-      showToast(`🎯 Icon Ad Clicked! Directing to store for ${cmp.title || cmp.name}...`);
-      const targetUrl = cmp.target_url || cmp.target_url_android;
-      if (/^https?:\/\//i.test(targetUrl)) window.open(targetUrl, "_blank", "noopener,noreferrer");
+      openDisplayedCampaign();
     }
 
     function simulateInterstitialClick() {
-      const interstitials = allCampaigns.filter(c => c.ad_type !== "icon");
-      if (interstitials.length === 0) return;
-      const cmp = interstitials[currentSimInterIndex];
-      cmp.clicks = (cmp.clicks || 0) + 1;
-      updateKPIs();
-      renderMainCampaigns();
-      renderAnalytics();
+      openDisplayedCampaign();
+    }
 
-      showToast(`🎯 Interstitial Clicked! Directing to ${cmp.title || cmp.name}...`);
-      const targetUrl = cmp.target_url || cmp.target_url_android;
-      if (/^https?:\/\//i.test(targetUrl)) window.open(targetUrl, "_blank", "noopener,noreferrer");
+    function openDisplayedCampaign() {
+      const campaign = allCampaigns.find(c => c.id === displayedPreviewId);
+      const url = campaign?.target_url_android || campaign?.target_url || campaign?.target_url_web;
+      if (/^https?:\/\//i.test(url)) window.open(url, "_blank", "noopener,noreferrer");
     }
 
     function startSimTimer() {
@@ -2570,6 +2600,7 @@
 
     // Tab Switching
     function switchTab(tabId) {
+      if (activeTab !== tabId && !["icons", "campaigns"].includes(tabId)) explicitPreviewId = null;
       activeTab = tabId;
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
@@ -2629,7 +2660,7 @@
 
       document.getElementById("kpiImpressions").textContent = totalImp.toLocaleString();
       document.getElementById("kpiClicks").textContent = totalClicks.toLocaleString();
-      document.getElementById("kpiCtr").textContent = `${overallCtr}%`;
+      document.getElementById("kpiCtr").textContent = totalImp ? `${overallCtr}%` : "—";
       document.getElementById("kpiIconCount").textContent = `${iconCount} Games`;
     }
 
@@ -2771,88 +2802,65 @@
     function handleDeleteAssetByIndex(idx) {
       const a = KNOWN_ASSETS[idx];
       if (!a) return;
-      handleDeleteAsset(a.path, a.name, a.sha);
+      handleDeleteAsset(a.path, a.name);
     }
 
-    async function handleDeleteAsset(path, name, sha) {
+    function inspectCreative(src) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        const timeout = setTimeout(() => {
+          image.onload = image.onerror = null;
+          reject(new Error(`Image did not load: ${src}`));
+        }, 12000);
+        image.onload = () => {
+          clearTimeout(timeout);
+          resolve({ width: image.naturalWidth, height: image.naturalHeight });
+        };
+        image.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error(`Image is unavailable or unreadable: ${src}`));
+        };
+        image.src = src;
+      });
+    }
+
+    function handleDeleteAsset(path, name) {
       requireAdmin("delete creative assets", async () => {
-        // Check if graphic is referenced in any active or paused campaign
-        const usedIn = allCampaigns.filter(c => 
-          c.creative_icon_url === path ||
-          c.creative_interstitial_portrait_url === path ||
-          c.creative_interstitial_landscape_url === path ||
-          c.creative_interstitial_url === path ||
-          c.creative_banner_url === path ||
-          (c.creative_icon_url && (c.creative_icon_url.endsWith("/" + name) || c.creative_icon_url === name)) ||
-          (c.creative_interstitial_portrait_url && (c.creative_interstitial_portrait_url.endsWith("/" + name) || c.creative_interstitial_portrait_url === name)) ||
-          (c.creative_interstitial_landscape_url && (c.creative_interstitial_landscape_url.endsWith("/" + name) || c.creative_interstitial_landscape_url === name)) ||
-          (c.creative_interstitial_url && (c.creative_interstitial_url.endsWith("/" + name) || c.creative_interstitial_url === name))
-        );
-
-        if (usedIn.length > 0) {
-          const names = usedIn.map(c => `• "${c.title || c.name}"`).join("\n");
-          const ok = confirm(
-            `⚠️ WARNING: Graphic "${name}" is actively linked to ${usedIn.length} campaign(s):\n${names}\n\nDeleting this graphic will cause missing images in live game ads!\n\nAre you sure you want to permanently delete it from the repository?`
-          );
-          if (!ok) return;
-        } else {
-          const ok = confirm(
-            `🗑️ Delete Graphic: "${name}"\n\nThis will permanently remove the graphic file from the GitHub repository and CDN.\n\nProceed with deletion?`
-          );
-          if (!ok) return;
-        }
-
-        const token = getActiveToken();
-        if (!token) {
-          showToast("⚠️ Missing GitHub authentication token.", true);
-          return;
-        }
-
-        showToast(`⏳ Deleting graphic "${name}" from repository...`);
-
-        let targetSha = sha;
-        if (!targetSha) {
-          try {
-            const getRes = await request(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}&_t=${Date.now()}`, {
-              headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
-            });
-            if (getRes.ok) {
-              const fileData = await getRes.json();
-              targetSha = fileData.sha;
-            }
-          } catch (e) {}
-        }
-
-        if (!targetSha) {
-          showToast(`⚠️ Could not retrieve file SHA for "${name}".`, true);
-          return;
-        }
-
+        if (!confirm(`Delete creative "${name}" from GitHub?`)) return;
         try {
-          const delRes = await request(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
-            method: "DELETE",
-            headers: {
-              "Authorization": `token ${token}`,
-              "Content-Type": "application/json",
-              "Accept": "application/vnd.github.v3+json"
-            },
-            body: JSON.stringify({
-              message: `Delete graphic ${name} via ArtSphere Studio Dashboard`,
-              sha: targetSha,
-              branch: GH_BRANCH
-            })
-          });
-
-          if (delRes.ok) {
-            showToast(`✅ Graphic "${name}" deleted from repository!`);
-            KNOWN_ASSETS = KNOWN_ASSETS.filter(a => a.path !== path && a.name !== name);
+          await queueWrite(async token => {
+            const campaignResponse = await readContent(GH_FILE, token);
+            if (!campaignResponse.ok) throw await githubError(campaignResponse);
+            const { content } = await campaignResponse.json();
+            const feed = JSON.parse(new TextDecoder().decode(
+              Uint8Array.from(atob(content.replace(/\s/g, "")), char => char.charCodeAt(0))
+            ));
+            const referenced = feed.campaigns.some(campaign =>
+              Object.entries(campaign).some(([key, value]) => {
+                if (!/^creative_.*_url$/.test(key) || typeof value !== "string" || !value) return false;
+                let pathname;
+                try { pathname = new URL(value, document.baseURI).pathname; } catch { return false; }
+                let decoded = pathname;
+                try { decoded = decodeURIComponent(pathname); } catch {}
+                return decoded.endsWith("/" + path) || decoded.endsWith("/" + name);
+              })
+            );
+            if (referenced) throw new Error("This creative is still referenced by a published campaign.");
+            const current = await readContent(path, token);
+            if (!current.ok) throw await githubError(current);
+            const { sha } = await current.json();
+            const response = await request(contentsUrl(path), {
+              method: "DELETE",
+              headers: { ...githubHeaders(token), "Content-Type": "application/json" },
+              body: JSON.stringify({ message: `Delete creative ${name}`, sha, branch: GH_BRANCH })
+            });
+            if (!response.ok) throw await githubError(response, true);
+            KNOWN_ASSETS = KNOWN_ASSETS.filter(asset => asset.path !== path);
             renderAssets();
-          } else {
-            const errData = await delRes.json().catch(() => ({}));
-            showToast(`⚠️ Delete failed: ${errData.message || "GitHub API error"}`, true);
-          }
-        } catch (err) {
-          showToast("⚠️ Network issue during graphic deletion.", true);
+            showToast(`Creative deleted: ${name}`);
+          });
+        } catch (error) {
+          showToast("Could not delete creative. " + error.message, true);
         }
       });
     }
@@ -2943,6 +2951,12 @@
       document.getElementById("assetUploadModal").style.display = "none";
     }
 
+    function showUploadDimensions(image) {
+      const status = document.getElementById("assetUploadStatus");
+      const { naturalWidth: width, naturalHeight: height } = image;
+      status.textContent = `${width} × ${height} pixels`;
+    }
+
     function previewUploadImage(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -2978,8 +2992,7 @@
           const path = `creatives/${filename}`;
           const existing = await readContent(path, token);
           if (!existing.ok && existing.status !== 404) throw await githubError(existing, true);
-          const previous = existing.ok ? await existing.json() : null;
-          if (previous && !confirm(`Replace "${filename}"? Games using this path will see the new image.`)) return false;
+          if (existing.ok) throw new Error("A creative already uses this filename. Choose a new filename to keep existing ads intact.");
           const content = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result.split(",")[1]);
@@ -2987,11 +3000,14 @@
             reader.readAsDataURL(file);
           });
           const body = { message: `Upload asset ${filename}`, content };
-          if (previous) body.sha = previous.sha;
+          if (!/^image\/(png|jpeg|webp|gif)$/i.test(file.type)) {
+            throw new Error("Choose a PNG, JPEG, WebP, or GIF image.");
+          }
+          const { width, height } = await inspectCreative("data:" + file.type + ";base64," + content);
           const response = await writeContent(path, body, token);
           if (!response.ok) throw await githubError(response, true);
           const saved = await response.json();
-          KNOWN_ASSETS = [{ name: filename, path, sha: saved.content.sha, dims: "Custom Graphic",
+          KNOWN_ASSETS = [{ name: filename, path, sha: saved.content.sha, dims: `${width} × ${height} pixels`,
             type: "custom", sizeFormatted: `${Math.round(file.size / 1024)} KB` },
             ...KNOWN_ASSETS.filter(asset => asset.path !== path)];
           renderAssets();

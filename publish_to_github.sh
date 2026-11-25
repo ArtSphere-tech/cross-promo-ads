@@ -1,28 +1,27 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-cd "$DIR"
-
-echo "======================================================="
-echo "  🚀 Cross-Promotion GitHub Pages 1-Click Publisher   "
-echo "======================================================="
-
-if [ -z "$(git config user.name 2>/dev/null)" ]; then
-    git config user.name "ArtSphere-tech"
-fi
-if [ -z "$(git config user.email 2>/dev/null)" ]; then
-    git config user.email "artsphere@users.noreply.github.com"
+cd "$(dirname "${BASH_SOURCE[0]}")"
+git remote get-url origin >/dev/null
+if [[ "$(git branch --show-current)" != "main" ]]; then
+    echo "Switch to main before publishing." >&2
+    exit 1
 fi
 
-if [ ! -d ".git" ]; then
-    git init
-    git branch -M main
+git fetch origin main
+if ! git merge-base --is-ancestor origin/main HEAD; then
+    echo "Local main is behind GitHub. Synchronize before publishing." >&2
+    exit 1
 fi
 
-git add -A
-git commit -m "Update CrossPromo campaigns feed and ad creatives" || echo "Already up to date."
+if ! git diff --cached --quiet; then
+    echo "Unstage existing changes before using this publisher." >&2
+    exit 1
+fi
 
-echo ""
-echo "🚀 Pushing to GitHub (main branch)..."
-git push -u origin main
+python3 validate_campaigns.py
+git add -- campaigns.json creatives/
+if ! git diff --cached --quiet; then
+    git commit -m "Update cross-promotion campaigns and creatives"
+fi
+git push origin HEAD:main
