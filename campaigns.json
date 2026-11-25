@@ -45,7 +45,7 @@
       "creative_interstitial_landscape_url": "creatives/LS_MFT world",
       "creative_banner_url": "creatives/icon-MFT_ World",
       "rotation_seconds": 6,
-      "priority": 80,
+      "priority": 50,
       "frequency_cap": 0,
       "is_active": true,
       "impressions": 0,
