@@ -1398,7 +1398,7 @@
         <div class="form-group">
           <label class="form-label" for="adminCustomToken">GitHub access token</label>
           <input type="password" id="adminCustomToken" class="form-input" autocomplete="off" required>
-          <small>Use a fine-grained token for this repository with Contents write access. Sign-in survives refresh in this tab. Sign out when you finish.</small>
+          <small>Use a fine-grained token for this repository with Contents write access. Sign-in survives refresh in this tab. Sign out when you finish. <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener noreferrer">Manage GitHub tokens</a>.</small>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
@@ -1421,6 +1421,7 @@
       </div>
 
       <form id="campaignForm" onsubmit="handleCampaignSubmit(event)">
+        <p id="campaignSaveStatus" role="status" aria-live="polite"></p>
         <input type="hidden" id="campaignId">
 
         <div class="form-row">
@@ -1539,6 +1540,7 @@
       </div>
 
       <form id="uploadAssetForm" onsubmit="handleAssetUploadSubmit(event)">
+        <p id="assetUploadStatus" role="status" aria-live="polite"></p>
         <div class="form-group">
           <label class="form-label">Select Graphic File (App Icon or Interstitial)</label>
           <input type="file" id="assetFileInput" class="form-input" accept="image/*" required onchange="previewUploadImage(event)">
@@ -1560,6 +1562,8 @@
         </div>
       </form>
     </div>
+  </div>
+
   <!-- MODAL: ASSET PICKER / BROWSER -->
   <div class="modal-backdrop" id="assetPickerModal" style="display: none;">
     <div class="modal-card" style="max-width: 680px; max-height: 85vh; display: flex; flex-direction: column;">
@@ -1575,7 +1579,7 @@
         <div style="font-size: 0.8rem; color: var(--text-muted);" id="assetPickerSubtext">
           Click any asset below to assign it immediately:
         </div>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="closeAssetPickerModal(); openAssetUploadModal();">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="openAssetUploadModal(currentPickerTarget); closeAssetPickerModal();">
           📤 Upload New Asset
         </button>
       </div>
@@ -1589,6 +1593,18 @@
       </div>
     </div>
   </div>
+
+  <dialog id="deleteCampaignDialog" class="modal-card" aria-labelledby="deleteCampaignTitle">
+    <form id="deleteCampaignForm" onsubmit="confirmCampaignDelete(event)">
+      <h2 id="deleteCampaignTitle">Delete campaign</h2>
+      <p id="deleteCampaignPrompt"></p>
+      <p id="deleteCampaignStatus" role="status" aria-live="polite"></p>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button type="button" class="btn btn-secondary" onclick="this.closest('dialog').close()">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete campaign</button>
+      </div>
+    </form>
+  </dialog>
 
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toastBox"></div>
@@ -1843,9 +1859,13 @@
       return `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
     }
 
-    async function githubError(response) {
+    async function githubError(response, writing = false) {
       const details = await response.json().catch(() => ({}));
-      return new Error(`GitHub HTTP ${response.status}. ${details.message || response.statusText}`);
+      const message = details.message || response.statusText;
+      const permissionHelp = writing && response.status === 403 && /resource not accessible/i.test(message)
+        ? " Check that your fine-grained token has ArtSphere-tech as resource owner, cross-promo-ads selected, and Contents set to Read and write. If approval is pending, complete it in GitHub. Then sign out and sign in again."
+        : "";
+      return new Error(`GitHub HTTP ${response.status}. ${message}${permissionHelp}`);
     }
 
     async function readContent(path, token) {
@@ -1874,7 +1894,7 @@
       return result;
     }
 
-    async function saveCampaignChange(change, message) {
+    async function saveCampaignChange(change, message, status = null) {
       try {
         await queueWrite(async token => {
           for (let attempt = 0; attempt < 3; attempt++) {
@@ -1892,7 +1912,7 @@
             const content = btoa(Array.from(new TextEncoder().encode(JSON.stringify(feed, null, 2)), byte => String.fromCharCode(byte)).join(""));
             const response = await writeContent(GH_FILE, { message, content, sha: file.sha }, token);
             if (response.status === 409 && attempt < 2) continue;
-            if (!response.ok) throw await githubError(response);
+            if (!response.ok) throw await githubError(response, true);
 
             allCampaigns = feed.campaigns;
             try { localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(allCampaigns)); } catch {}
@@ -1906,7 +1926,9 @@
         });
         return true;
       } catch (error) {
-        showToast("Campaign change failed. " + error.message, true);
+        const message = "Campaign change failed. " + error.message;
+        if (status) status.textContent = message;
+        showToast(message, true);
         return false;
       }
     }
@@ -2097,6 +2119,7 @@
     }
 
     function openCampaignModal(mode = "interstitial", editData = null) {
+      document.getElementById("campaignSaveStatus").textContent = "";
       const isIcon = mode === "icon";
       document.getElementById("modalCampaignTitle").textContent = editData ? `Edit ${isIcon ? "Icon" : "Main"} Campaign` : `Create New ${isIcon ? "Icon" : "Main"} Campaign`;
       document.getElementById("modalCampaignIcon").textContent = isIcon ? "⭐" : "⚡";
@@ -2196,9 +2219,11 @@
       }
 
       const button = e.currentTarget.querySelector('[type="submit"]');
+      const status = document.getElementById("campaignSaveStatus");
       button.disabled = true;
+      status.textContent = "Saving campaign to GitHub…";
       try {
-        if (await saveCampaignChange(change, `Save campaign ${name}`)) closeCampaignModal();
+        if (await saveCampaignChange(change, `Save campaign ${name}`, status)) closeCampaignModal();
       } finally {
         button.disabled = false;
       }
@@ -2207,10 +2232,32 @@
     function handleDeleteCampaign(id) {
       requireAdmin("delete this campaign", () => {
         const campaign = allCampaigns.find(item => item.id === id);
-        if (campaign && confirm(`Delete campaign "${campaign.title || campaign.name}" from the game feed?`)) {
-          saveCampaignChange({ type: "delete", id }, `Delete campaign ${campaign.name}`);
-        }
+        if (!campaign) return;
+        const dialog = document.getElementById("deleteCampaignDialog");
+        document.getElementById("deleteCampaignForm").dataset.campaignId = id;
+        document.getElementById("deleteCampaignStatus").textContent = "";
+        document.getElementById("deleteCampaignPrompt").textContent =
+          `Remove "${campaign.title || campaign.name}" from the game feed?`;
+        dialog.showModal();
       });
+    }
+
+    async function confirmCampaignDelete(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const id = form.dataset.campaignId;
+      const status = document.getElementById("deleteCampaignStatus");
+      const button = form.querySelector('[type="submit"]');
+      if (button.disabled) return;
+      button.disabled = true;
+      status.textContent = "Deleting campaign on GitHub…";
+      try {
+        if (await saveCampaignChange({ type: "delete", id }, "Delete campaign", status)) {
+          document.getElementById("deleteCampaignDialog").close();
+        }
+      } finally {
+        button.disabled = false;
+      }
     }
 
     // SIMULATOR AUTO-ROTATION (5 to 8 SECONDS)
@@ -2880,8 +2927,12 @@
     }
 
     // Asset Upload Modal
-    function openAssetUploadModal() {
+    let uploadPickerTarget = null;
+
+    function openAssetUploadModal(target = null) {
       requireAdmin("upload creative assets", () => {
+        uploadPickerTarget = target;
+        document.getElementById("assetUploadStatus").textContent = "";
         document.getElementById("uploadAssetForm").reset();
         document.getElementById("uploadPreviewBox").style.display = "none";
         document.getElementById("assetUploadModal").style.display = "flex";
@@ -2911,19 +2962,22 @@
 
     async function handleAssetUploadSubmit(event) {
       event.preventDefault();
+      const status = document.getElementById("assetUploadStatus");
+      const pickerTarget = uploadPickerTarget;
       const file = document.getElementById("assetFileInput").files[0];
       const filename = document.getElementById("assetTargetFilename").value.trim();
       if (!file || !/^[a-z0-9][a-z0-9._-]*$/i.test(filename)) {
-        showToast("Choose a file and use letters, numbers, dots, dashes or underscores in its name.", true);
+        status.textContent = "Choose a file and use letters, numbers, dots, dashes or underscores in its name.";
         return;
       }
       const button = event.currentTarget.querySelector('[type="submit"]');
       button.disabled = true;
+      status.textContent = "Uploading image to GitHub…";
       try {
         const uploaded = await queueWrite(async token => {
           const path = `creatives/${filename}`;
           const existing = await readContent(path, token);
-          if (!existing.ok && existing.status !== 404) throw await githubError(existing);
+          if (!existing.ok && existing.status !== 404) throw await githubError(existing, true);
           const previous = existing.ok ? await existing.json() : null;
           if (previous && !confirm(`Replace "${filename}"? Games using this path will see the new image.`)) return false;
           const content = await new Promise((resolve, reject) => {
@@ -2935,18 +2989,26 @@
           const body = { message: `Upload asset ${filename}`, content };
           if (previous) body.sha = previous.sha;
           const response = await writeContent(path, body, token);
-          if (!response.ok) throw await githubError(response);
+          if (!response.ok) throw await githubError(response, true);
           const saved = await response.json();
           KNOWN_ASSETS = [{ name: filename, path, sha: saved.content.sha, dims: "Custom Graphic",
             type: "custom", sizeFormatted: `${Math.round(file.size / 1024)} KB` },
             ...KNOWN_ASSETS.filter(asset => asset.path !== path)];
           renderAssets();
           showToast(`Creative committed to GitHub. ${path}`);
-          return true;
+          return path;
         });
-        if (uploaded) closeAssetUploadModal();
+        status.textContent = "";
+        if (uploaded) {
+          if (pickerTarget) {
+            currentPickerTarget = pickerTarget;
+            selectAssetForField(uploaded);
+          }
+          closeAssetUploadModal();
+        }
       } catch (error) {
-        showToast("Upload failed. " + error.message, true);
+        status.textContent = "Upload failed. " + error.message;
+        showToast(status.textContent, true);
       } finally {
         button.disabled = false;
       }
