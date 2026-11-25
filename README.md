@@ -20,3 +20,14 @@ Keep existing creative paths, campaign IDs, and feed fields stable. If you remov
 Run `python3 validate_campaigns.py` to check campaign IDs, activation flags, HTTPS or HTTP destinations, and local creative paths. Use `bash publish_to_github.sh` from a current `main` checkout to validate and publish campaign data and creatives. The script requires an authenticated `origin` and stages the feed and creative directory.
 
 When reverting a dashboard-only update, revert the dashboard commit. When reverting a campaign change, restore the affected record or creative without overwriting later campaign edits.
+
+## Player analytics
+
+AdMatrix reads impressions and clicks from a separate HTTPS collector. GitHub Pages continues serving `campaigns.json` and the existing creatives. The legacy counters in the feed are not used for the dashboard charts.
+
+- Run the collector with Node.js 24 using `node analytics/server.mjs`. Set a strong `ANALYTICS_READ_TOKEN`, a persistent `ANALYTICS_DATABASE` path, and `PORT` as required. The collector binds to localhost by default. Set `HOST` only when the host requires an external listener.
+- Serve it behind an HTTPS reverse proxy. Restrict event ingress with rate limits and monitoring. The game event endpoint is public, so events are client reports and should not be treated as audited billing or fraud-resistant data. Back up the SQLite database.
+- Set `analyticsServerUrl` in the Unity `CrossPromoSettings` resource to the HTTPS collector origin. Preserve `serverUrl` for ad delivery. Release the updated game builds after verifying a real impression and click from a test build.
+- In AdMatrix, open **Performance & CTR**, enter the collector URL and its analytics read token, choose a range, and load analytics. This read token is separate from your GitHub token. Keep it out of Unity builds and version control.
+
+The collector stores the campaign ID, event type, random event ID, and server receipt time. It does not store player or device IDs. Analytics starts when updated game builds begin reporting. Counts from earlier GitHub Pages builds cannot be reconstructed from the feed.

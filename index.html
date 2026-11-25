@@ -1095,18 +1095,18 @@
       <div class="stats-row">
         <div class="metric-card">
           <div class="metric-header"><span>Total Impressions</span><span>👁️</span></div>
-          <div class="metric-value" id="kpiImpressions">3,764</div>
-          <div class="metric-sub neutral">Published feed data</div>
+          <div class="metric-value" id="kpiImpressions">—</div>
+          <div class="metric-sub neutral">Selected analytics range</div>
         </div>
         <div class="metric-card success">
           <div class="metric-header"><span>Total Player Clicks</span><span>🎯</span></div>
-          <div class="metric-value" id="kpiClicks">530</div>
-          <div class="metric-sub neutral">Published feed data</div>
+          <div class="metric-value" id="kpiClicks">—</div>
+          <div class="metric-sub neutral">Selected analytics range</div>
         </div>
         <div class="metric-card">
           <div class="metric-header"><span>Studio Overall CTR</span><span>🔥</span></div>
-          <div class="metric-value" id="kpiCtr">14.08%</div>
-          <div class="metric-sub neutral">Published feed data</div>
+          <div class="metric-value" id="kpiCtr">—</div>
+          <div class="metric-sub neutral">Selected analytics range</div>
         </div>
         <div class="metric-card gold">
           <div class="metric-header"><span>Rotating Games</span><span>⭐</span></div>
@@ -1193,10 +1193,21 @@
     <div id="tabContent_analytics" class="tab-content">
       <div class="controls-bar">
         <h2 style="font-size: 1.2rem; font-weight: 800;">📈 In-Game CTR & Performance Matrix</h2>
-        <span class="system-status">Live Telemetry Synchronized</span>
+        <span id="analyticsStatus" class="system-status" role="status">Analytics is disconnected.</span>
       </div>
 
-      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 14px; overflow: hidden; backdrop-filter: blur(12px);">
+      <form class="controls-bar" onsubmit="refreshAnalytics(event)">
+        <label>Collector URL <input id="analyticsEndpoint" class="form-input" type="url" required placeholder="https://analytics.example.com"></label>
+        <label>Read token <input id="analyticsToken" class="form-input" type="password" autocomplete="off" required></label>
+        <label>Range <select id="analyticsDays" class="form-select">
+          <option value="1">Last 24 hours</option>
+          <option value="7" selected>Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select></label>
+        <button class="btn btn-primary" type="submit">Load analytics</button>
+      </form>
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 14px; overflow-x: auto; backdrop-filter: blur(12px);">
         <table class="analytics-table">
           <thead>
             <tr>
@@ -1204,8 +1215,7 @@
               <th>Format & Placement</th>
               <th>Impressions</th>
               <th>Store Clicks</th>
-              <th>CTR Benchmark</th>
-              <th>Performance Rating</th>
+              <th>CTR</th>
             </tr>
           </thead>
           <tbody id="analyticsTableBody">
@@ -2032,7 +2042,7 @@
 
     function renderCardHtml(c, isIconMode) {
       const realIndex = allCampaigns.findIndex(item => item.id === c.id);
-      const ctr = c.impressions > 0 ? ((c.clicks / c.impressions) * 100).toFixed(1) : "0.0";
+      const stats = campaignStats(c.id);
       const isLive = isCampaignActive(c);
       const hasPortrait = !!(c.creative_interstitial_portrait_url || (!isIconMode && c.creative_interstitial_url));
       const hasLandscape = !!(c.creative_interstitial_landscape_url);
@@ -2076,15 +2086,15 @@
                 ` : ''}
                 <div class="meta-item">
                   <span>Impressions:</span>
-                  <strong>${escapeHtml((c.impressions || 0).toLocaleString())}</strong>
+                  <strong>${displayMetric(stats?.impressions)}</strong>
                 </div>
                 <div class="meta-item">
                   <span>Clicks:</span>
-                  <strong>${escapeHtml((c.clicks || 0).toLocaleString())}</strong>
+                  <strong>${displayMetric(stats?.clicks)}</strong>
                 </div>
                 <div class="meta-item">
                   <span>CTR:</span>
-                  <span class="meta-ctr">${ctr}%</span>
+                  <span class="meta-ctr">${displayCtr(stats)}</span>
                 </div>
               </div>
             </div>
@@ -2645,54 +2655,83 @@
       renderIconCampaigns();
     }
 
+    let analyticsStats = null;
+
+    function campaignStats(id) {
+      return analyticsStats?.get(id) || (analyticsStats ? { impressions: 0, clicks: 0 } : null);
+    }
+
+    function displayMetric(value) {
+      return value?.toLocaleString() ?? "—";
+    }
+
+    function displayCtr(stats) {
+      return stats?.impressions ? (100 * stats.clicks / stats.impressions).toFixed(2) + "%" : "—";
+    }
+
+    async function refreshAnalytics(event) {
+      event.preventDefault();
+      const button = event.currentTarget.querySelector('[type="submit"]');
+      const status = document.getElementById("analyticsStatus");
+      button.disabled = true;
+      status.textContent = "Loading analytics…";
+      try {
+        const base = new URL(document.getElementById("analyticsEndpoint").value.trim());
+        if (base.protocol !== "https:" || base.username || base.password) throw new Error("Enter an HTTPS collector URL.");
+        const token = document.getElementById("analyticsToken").value.trim();
+        const days = document.getElementById("analyticsDays").value;
+        const endpoint = new URL("/api/v1/stats", base);
+        endpoint.searchParams.set("days", days);
+        const response = await request(endpoint, { headers: { Authorization: "Bearer " + token } });
+        if (!response.ok) throw new Error(`Collector returned HTTP ${response.status}.`);
+        const data = await response.json();
+        if (!Array.isArray(data.campaigns)) throw new Error("Invalid analytics response.");
+        analyticsStats = new Map(data.campaigns.map(row => {
+          if (typeof row.campaign_id !== "string" || ![row.impressions, row.clicks].every(v => Number.isSafeInteger(v) && v >= 0)) {
+            throw new Error("Invalid campaign totals.");
+          }
+          return [row.campaign_id, row];
+        }));
+        status.textContent = `Last ${days === "1" ? "24 hours" : days + " days"} · Updated ${new Date().toLocaleTimeString()}`;
+      } catch (error) {
+        analyticsStats = null;
+        status.textContent = "Analytics unavailable. " + error.message;
+      } finally {
+        button.disabled = false;
+        updateKPIs();
+        renderMainCampaigns();
+        renderIconCampaigns();
+        renderAnalytics();
+      }
+    }
+
     function updateKPIs() {
-      let totalImp = 0;
-      let totalClicks = 0;
-      let iconCount = 0;
-
-      allCampaigns.forEach(c => {
-        totalImp += (c.impressions || 0);
-        totalClicks += (c.clicks || 0);
-        if (c.ad_type === "icon" && isCampaignActive(c)) iconCount++;
-      });
-
-      const overallCtr = totalImp > 0 ? ((totalClicks / totalImp) * 100).toFixed(2) : "0.00";
-
-      document.getElementById("kpiImpressions").textContent = totalImp.toLocaleString();
-      document.getElementById("kpiClicks").textContent = totalClicks.toLocaleString();
-      document.getElementById("kpiCtr").textContent = totalImp ? `${overallCtr}%` : "—";
-      document.getElementById("kpiIconCount").textContent = `${iconCount} Games`;
+      const total = analyticsStats && Array.from(analyticsStats.values()).reduce((sum, row) => ({
+        impressions: sum.impressions + row.impressions,
+        clicks: sum.clicks + row.clicks
+      }), { impressions: 0, clicks: 0 });
+      document.getElementById("kpiImpressions").textContent = displayMetric(total?.impressions);
+      document.getElementById("kpiClicks").textContent = displayMetric(total?.clicks);
+      document.getElementById("kpiCtr").textContent = displayCtr(total);
+      const icons = allCampaigns.filter(c => c.ad_type === "icon" && isCampaignActive(c)).length;
+      document.getElementById("kpiIconCount").textContent = `${icons} Games`;
     }
 
     function renderAnalytics() {
       const tbody = document.getElementById("analyticsTableBody");
       if (!tbody) return;
-
-      tbody.innerHTML = allCampaigns.map(c => {
-        const ctr = c.impressions > 0 ? ((c.clicks / c.impressions) * 100).toFixed(2) : "0.00";
-        const ctrNum = parseFloat(ctr);
-        const barWidth = Math.min(Math.max(ctrNum * 4, 8), 100);
-        const rating = ctrNum > 12 ? "🔥 Exceptional" : ctrNum > 6 ? "🟢 Strong" : "⚡ Moderate";
-        const isIcon = c.ad_type === "icon";
-
-        return `
-          <tr>
-            <td>
-              <div style="font-weight: 700; color: white;">${escapeHtml(c.title || c.name)}</div>
-              <div style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">${escapeHtml(c.target_game_id)}</div>
-            </td>
-            <td>
-              ${isIcon ? '<span class="badge-icon-tag">⭐ ICON: ' + escapeHtml((c.ad_unit || "corner")) + '</span>' : '<span class="badge-unit">' + escapeHtml((c.ad_type || "interstitial")) + '</span>'}
-            </td>
-            <td style="font-family: var(--font-mono);">${escapeHtml((c.impressions || 0).toLocaleString())}</td>
-            <td style="font-family: var(--font-mono); font-weight: 700; color: #34d399;">${escapeHtml((c.clicks || 0).toLocaleString())}</td>
-            <td>
-              <div class="ctr-bar-bg"><div class="ctr-bar-fill" style="width: ${barWidth}%;"></div></div>
-              <strong style="font-family: var(--font-mono);">${ctr}%</strong>
-            </td>
-            <td><span style="font-size: 0.8rem; font-weight: 700;">${rating}</span></td>
-          </tr>
-        `;
+      const known = new Map(allCampaigns.map(c => [c.id, c]));
+      const ids = new Set([...known.keys(), ...(analyticsStats?.keys() || [])]);
+      tbody.innerHTML = Array.from(ids, id => {
+        const campaign = known.get(id);
+        const stats = campaignStats(id);
+        return `<tr>
+          <td>${escapeHtml(campaign?.title || campaign?.name || id)}</td>
+          <td>${escapeHtml(campaign?.ad_unit || "—")}</td>
+          <td>${displayMetric(stats?.impressions)}</td>
+          <td>${displayMetric(stats?.clicks)}</td>
+          <td>${displayCtr(stats)}</td>
+        </tr>`;
       }).join("");
     }
 
