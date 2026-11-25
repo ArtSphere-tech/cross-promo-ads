@@ -16,7 +16,7 @@
       "creative_interstitial_portrait_url": "creatives/mommy-care-portrain.png",
       "creative_interstitial_landscape_url": "creatives/pregnant_mommy__landscape.png",
       "rotation_seconds": 6,
-      "priority": 50,
+      "priority": 80,
       "is_active": true,
       "id": "cmp_b43f3726-8963-47a7-b4b1-22dda0e44bd7",
       "platform": "all",
