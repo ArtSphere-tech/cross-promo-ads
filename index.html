@@ -1395,24 +1395,9 @@
 
       <form id="adminLoginForm" onsubmit="handleAdminSubmit(event)">
         <div class="form-group">
-          <label class="form-label">Admin Username</label>
-          <input type="text" id="adminUsername" class="form-input" placeholder="admin" required value="admin">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Admin Password</label>
-          <input type="password" id="adminPassword" class="form-input" placeholder="Enter studio password" required>
-          <small style="color: var(--text-dim); font-size: 0.72rem; margin-top: 0.3rem; display: block;">Authorized Studio Administrator Access</small>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Custom GitHub Access Token (Optional)</label>
-          <input type="password" id="adminCustomToken" class="form-input" placeholder="ghp_... (Leave blank to use pre-configured studio key)">
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
-          <input type="checkbox" id="adminRemember" checked style="accent-color: var(--primary);">
-          <label for="adminRemember" style="font-size: 0.82rem; color: var(--text-muted); cursor: pointer;">Remember session on this device</label>
+          <label class="form-label" for="adminCustomToken">GitHub access token</label>
+          <input type="password" id="adminCustomToken" class="form-input" autocomplete="off" required>
+          <small>Use a fine-grained token for this repository with Contents write access. The token stays in memory until sign-out or reload.</small>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
@@ -1615,16 +1600,7 @@
     const GH_FILE = "campaigns.json";
     const GH_BRANCH = "main";
 
-    // Safe Token Chunks
-    const TOKEN_PARTS = ["Z2hwX3VJQ2hUdkxE", "bXIwZXlwd3NLYVpI", "U2NrM1NzNmdCazRK", "ZEsxaw=="];
-    function getDecodedToken() {
-      try { return atob(TOKEN_PARTS.join("")); } catch(e) { return ""; }
-    }
-
-    // Studio Admin Password (dr4393250)
-    const DEFAULT_ADMIN_USER = "admin";
-    const DEFAULT_ADMIN_PASS = "dr4393250";
-    const ALT_ADMIN_PASS = "artsphere2026";
+    let githubToken = "";
 
     // State
     let allCampaigns = [];
@@ -1633,7 +1609,6 @@
     let currentIconFilter = "all";
     let searchQuery = "";
     let searchIconQuery = "";
-    let repoSha = "";
 
     // Simulator State
     let currentSimInterIndex = 0;
@@ -1679,8 +1654,12 @@
 
     // Session Management
     function checkExistingSession() {
-      const savedAuth = localStorage.getItem("artsphere_admin_session") || sessionStorage.getItem("artsphere_admin_session");
-      setAdminState(savedAuth === "authenticated_true", false);
+      try {
+        localStorage.removeItem("cp_github_token");
+        localStorage.removeItem("artsphere_admin_session");
+        sessionStorage.removeItem("artsphere_admin_session");
+      } catch {}
+      setAdminState(false, false);
     }
 
     function setAdminState(isAuth, showNotice = true) {
@@ -1740,40 +1719,36 @@
 
     function openAdminModal() {
       document.getElementById("adminLoginModal").style.display = "flex";
-      document.getElementById("adminPassword").focus();
+      document.getElementById("adminCustomToken").focus();
     }
     function closeAdminModal() {
       document.getElementById("adminLoginModal").style.display = "none";
     }
 
-    function handleAdminSubmit(e) {
-      e.preventDefault();
-      const user = document.getElementById("adminUsername").value.trim();
-      const pass = document.getElementById("adminPassword").value.trim();
-      const customToken = document.getElementById("adminCustomToken").value.trim();
-      const remember = document.getElementById("adminRemember").checked;
-
-      if ((user.toLowerCase() === DEFAULT_ADMIN_USER || user.toLowerCase() === "artsphere") && 
-          (pass === DEFAULT_ADMIN_PASS || pass === ALT_ADMIN_PASS)) {
-        
-        if (customToken) localStorage.setItem("cp_github_token", customToken);
-        if (remember) localStorage.setItem("artsphere_admin_session", "authenticated_true");
-        else sessionStorage.setItem("artsphere_admin_session", "authenticated_true");
-
+    async function handleAdminSubmit(event) {
+      event.preventDefault();
+      const field = document.getElementById("adminCustomToken");
+      const token = field.value.trim();
+      if (!token) return;
+      const button = event.currentTarget.querySelector('[type="submit"]');
+      button.disabled = true;
+      try {
+        const response = await fetch("https://api.github.com/user", { headers: githubHeaders(token) });
+        if (!response.ok) throw await githubError(response);
+        githubToken = token;
         closeAdminModal();
         setAdminState(true, true);
-      } else {
-        alert("❌ Invalid Admin Credentials. Please enter the correct Studio password.");
+      } catch (error) {
+        showToast("GitHub sign-in failed. " + error.message, true);
+      } finally {
+        field.value = "";
+        button.disabled = false;
       }
     }
 
     function logoutAdmin() {
-      if (confirm("Sign out of Studio Admin session? Actions will return to read-only view mode.")) {
-        localStorage.removeItem("artsphere_admin_session");
-        sessionStorage.removeItem("artsphere_admin_session");
-        setAdminState(false, true);
-        showToast("ℹ️ Switched to View-Only Mode.");
-      }
+      githubToken = "";
+      setAdminState(false);
     }
 
     function requireAdmin(actionName, callback) {
@@ -1822,7 +1797,6 @@
           });
           if (res.ok) {
             const data = await res.json();
-            repoSha = data.sha;
             if (data.content) {
               const decodedStr = decodeURIComponent(escape(atob(data.content.replace(/\s/g, ""))));
               const parsed = JSON.parse(decodedStr);
@@ -1891,128 +1865,86 @@
       }
     }
 
-    async function fetchRepoSha() {
-      const token = getActiveToken();
-      if (!token) return;
-      try {
-        const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}&_t=${Date.now()}`, {
-          headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          repoSha = data.sha;
-        }
-      } catch (e){}
-    }
-
     function getActiveToken() {
-      const custom = localStorage.getItem("cp_github_token");
-      if (custom && custom.trim()) return custom.trim();
-      return getDecodedToken();
+      return githubToken;
     }
 
-    // GitHub Sync State & Queue
-    let isSaving = false;
-    let saveQueue = [];
+    function githubHeaders(token = githubToken) {
+      return { Authorization: "Bearer " + token, Accept: "application/vnd.github+json" };
+    }
 
-    async function saveCampaignsToGitHub(updatedList, commitMsg = "Update campaigns via ArtSphere AdMatrix") {
-      allCampaigns = updatedList.map(c => ({
-        ...c,
-        is_active: isCampaignActive(c)
-      }));
-      localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(allCampaigns));
-      updateKPIs();
-      renderMainCampaigns();
-      renderIconCampaigns();
-      renderAnalytics();
+    function contentsUrl(path) {
+      return `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
+    }
 
-      const token = getActiveToken();
-      if (!token) {
-        showToast("⚠️ Saved locally in browser storage (write token missing).", true);
-        return;
-      }
+    async function githubError(response) {
+      const details = await response.json().catch(() => ({}));
+      return new Error(`GitHub HTTP ${response.status}. ${details.message || response.statusText}`);
+    }
 
-      return new Promise((resolve) => {
-        saveQueue.push({ commitMsg, resolve });
-        processSaveQueue();
+    async function readContent(path, token) {
+      return fetch(`${contentsUrl(path)}?ref=${encodeURIComponent(GH_BRANCH)}`, {
+        headers: githubHeaders(token), cache: "no-store"
       });
     }
 
-    async function processSaveQueue() {
-      if (isSaving || saveQueue.length === 0) return;
-      isSaving = true;
+    async function writeContent(path, body, token) {
+      return fetch(contentsUrl(path), {
+        method: "PUT",
+        headers: { ...githubHeaders(token), "Content-Type": "application/json" },
+        body: JSON.stringify({ ...body, branch: GH_BRANCH })
+      });
+    }
 
-      const currentReq = saveQueue.pop();
-      const intermediateResolvers = saveQueue.splice(0, saveQueue.length);
+    let writeQueue = Promise.resolve();
 
+    function queueWrite(operation) {
       const token = getActiveToken();
-      showToast("⏳ Synchronizing changes to GitHub Pages & Unity Clients...");
+      const result = writeQueue.then(() => {
+        if (!token || token !== getActiveToken()) throw new Error("Sign in again before publishing.");
+        return operation(token);
+      });
+      writeQueue = result.catch(() => {});
+      return result;
+    }
 
-      let attempts = 0;
-      let success = false;
+    async function saveCampaignChange(change, message) {
+      try {
+        await queueWrite(async token => {
+          for (let attempt = 0; attempt < 3; attempt++) {
+            const read = await readContent(GH_FILE, token);
+            if (!read.ok) throw await githubError(read);
+            const file = await read.json();
+            const bytes = Uint8Array.from(atob(file.content.replace(/\s/g, "")), ch => ch.charCodeAt(0));
+            const feed = JSON.parse(new TextDecoder().decode(bytes));
+            if (!Array.isArray(feed.campaigns)) throw new Error("The published campaign feed is invalid.");
+            const index = feed.campaigns.findIndex(campaign => campaign.id === change.id);
+            if (change.type !== "create" && index < 0) throw new Error("This campaign was removed. Reload the dashboard.");
+            if (change.type === "create") feed.campaigns.unshift(change.fields);
+            else if (change.type === "delete") feed.campaigns.splice(index, 1);
+            else Object.assign(feed.campaigns[index], change.fields);
+            const content = btoa(Array.from(new TextEncoder().encode(JSON.stringify(feed, null, 2)), byte => String.fromCharCode(byte)).join(""));
+            const response = await writeContent(GH_FILE, { message, content, sha: file.sha }, token);
+            if (response.status === 409 && attempt < 2) continue;
+            if (!response.ok) throw await githubError(response);
 
-      while (attempts < 3 && !success) {
-        attempts++;
-        try {
-          // ALWAYS fetch the latest repo SHA right before saving to prevent 409 conflicts
-          const checkRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}&_t=${Date.now()}`, {
-            headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
-          });
-          if (checkRes.ok) {
-            const checkData = await checkRes.json();
-            repoSha = checkData.sha;
+            allCampaigns = feed.campaigns;
+            try { localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(allCampaigns)); } catch {}
+            updateKPIs();
+            renderMainCampaigns();
+            renderIconCampaigns();
+            renderAnalytics();
+            showToast("Campaign change committed to GitHub.");
+            return;
           }
-
-          const payload = { success: true, campaigns: allCampaigns };
-          const contentStr = JSON.stringify(payload, null, 2);
-          const encodedContent = btoa(unescape(encodeURIComponent(contentStr)));
-
-          const bodyData = { 
-            message: currentReq.commitMsg, 
-            content: encodedContent, 
-            branch: GH_BRANCH 
-          };
-          if (repoSha) bodyData.sha = repoSha;
-
-          const putRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`, {
-            method: "PUT",
-            headers: { "Authorization": `token ${token}`, "Content-Type": "application/json", "Accept": "application/vnd.github.v3+json" },
-            body: JSON.stringify(bodyData)
-          });
-
-          if (putRes.ok) {
-            const resData = await putRes.json();
-            repoSha = resData.content?.sha || "";
-            success = true;
-            showToast("✅ Successfully deployed to GitHub Pages & Unity Clients!");
-          } else if (putRes.status === 409) {
-            console.warn(`Conflict detected (409), re-fetching latest SHA and retrying (${attempts}/3)...`);
-            repoSha = "";
-            await new Promise(r => setTimeout(r, 600));
-          } else {
-            console.error("Save error:", putRes.status, await putRes.text());
-            break;
-          }
-        } catch (err) {
-          console.error("Network issue during save:", err);
-          break;
-        }
-      }
-
-      if (!success) {
-        showToast("⚠️ Changes saved in browser storage. (GitHub sync pending)", true);
-      }
-
-      isSaving = false;
-      currentReq.resolve(success);
-      intermediateResolvers.forEach(r => r.resolve(success));
-
-      if (saveQueue.length > 0) {
-        processSaveQueue();
+        });
+        return true;
+      } catch (error) {
+        showToast("Campaign change failed. " + error.message, true);
+        return false;
       }
     }
 
-    // Render Tab 1: Main Campaigns (Interstitials & Banners)
     function renderMainCampaigns() {
       const container = document.getElementById("campaignListContainer");
       if (!container) return;
@@ -2097,10 +2029,10 @@
         : resolveImgUrl(c.creative_interstitial_portrait_url || c.creative_interstitial_url || c.creative_interstitial_landscape_url || c.creative_icon_url);
 
       return `
-        <div class="campaign-card ${isIconMode ? "icon-card" : ""} ${isLive ? "" : "inactive"}" id="card_${c.id}">
+        <div class="campaign-card ${isIconMode ? "icon-card" : ""} ${isLive ? "" : "inactive"}" id="card_${escapeHtml(c.id)}">
           <div class="campaign-card-inner">
-            <div class="campaign-thumb-wrap" onclick="previewCampaignInSimulator('${c.id}')" title="Preview in Phone Simulator">
-              <img src="${imgUrl}" alt="${escapeHtml(c.title || c.name)}" onerror="this.src='creatives/creative_truck_icon.png'">
+            <div class="campaign-thumb-wrap" onclick="previewCampaignInSimulator(${escapeHtml(JSON.stringify(c.id))})" title="Preview in Phone Simulator">
+              <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(c.title || c.name)}" onerror="this.src='creatives/creative_truck_icon.png'">
               <span class="thumb-ad-tag">AD</span>
               <span class="thumb-type-badge">${isIconMode ? "⭐ ICON" : (c.ad_type || "interstitial")}</span>
             </div>
@@ -2108,7 +2040,7 @@
             <div class="campaign-details">
               <div class="campaign-title-row">
                 <span class="campaign-title">${escapeHtml(c.title || c.name)}</span>
-                ${isIconMode ? '<span class="badge-icon-tag">📍 ' + (c.ad_unit || "all") + '</span>' : '<span class="badge-unit">' + (c.ad_unit || "all") + '</span>'}
+                ${isIconMode ? '<span class="badge-icon-tag">📍 ' + escapeHtml((c.ad_unit || "all")) + '</span>' : '<span class="badge-unit">' + escapeHtml((c.ad_unit || "all")) + '</span>'}
                 ${isLive ? '<span class="badge-active">● ACTIVE</span>' : '<span class="badge-paused">○ PAUSED</span>'}
               </div>
 
@@ -2119,7 +2051,7 @@
                   <span>Priority:</span>
                   <strong>${c.priority || 50}</strong>
                 </div>
-                ${isIconMode ? '<div class="meta-item"><span>Rotation:</span><strong style="color: #f59e0b;">' + (c.rotation_seconds || 6) + 's cycle</strong></div>' : ''}
+                ${isIconMode ? '<div class="meta-item"><span>Rotation:</span><strong style="color: #f59e0b;">' + escapeHtml((c.rotation_seconds || 6)) + 's cycle</strong></div>' : ''}
                 ${!isIconMode ? `
                 <div class="meta-item">
                   <span>Creatives:</span>
@@ -2132,11 +2064,11 @@
                 ` : ''}
                 <div class="meta-item">
                   <span>Impressions:</span>
-                  <strong>${(c.impressions || 0).toLocaleString()}</strong>
+                  <strong>${escapeHtml((c.impressions || 0).toLocaleString())}</strong>
                 </div>
                 <div class="meta-item">
                   <span>Clicks:</span>
-                  <strong>${(c.clicks || 0).toLocaleString()}</strong>
+                  <strong>${escapeHtml((c.clicks || 0).toLocaleString())}</strong>
                 </div>
                 <div class="meta-item">
                   <span>CTR:</span>
@@ -2148,22 +2080,22 @@
             <div class="campaign-card-actions">
               <!-- Switch -->
               <label class="switch ${isAdminAuthenticated ? "" : "locked"}" title="${isAdminAuthenticated ? (isLive ? "Click to Pause Ad" : "Click to Activate Ad") : "🔒 Admin Login Required"}">
-                <input type="checkbox" ${isLive ? "checked" : ""} onchange="handleToggleActive('${c.id}', this.checked, this)">
+                <input type="checkbox" ${isLive ? "checked" : ""} onchange="handleToggleActive(${escapeHtml(JSON.stringify(c.id))}, this.checked, this)">
                 <span class="slider"></span>
               </label>
 
               <!-- Test Button -->
-              <button class="btn btn-secondary btn-sm" onclick="previewCampaignInSimulator('${c.id}')" title="Preview in Phone Simulator">
+              <button class="btn btn-secondary btn-sm" onclick="previewCampaignInSimulator(${escapeHtml(JSON.stringify(c.id))})" title="Preview in Phone Simulator">
                 📱 Test
               </button>
 
               <!-- Edit Button -->
-              <button class="btn btn-secondary btn-sm" onclick="handleEditCampaign('${c.id}')" title="${isAdminAuthenticated ? "Edit" : "🔒 Admin Required"}">
+              <button class="btn btn-secondary btn-sm" onclick="handleEditCampaign(${escapeHtml(JSON.stringify(c.id))})" title="${isAdminAuthenticated ? "Edit" : "🔒 Admin Required"}">
                 ${isAdminAuthenticated ? "✏️ Edit" : "🔒"}
               </button>
 
               <!-- Delete Button -->
-              <button class="btn btn-danger btn-sm" onclick="handleDeleteCampaign('${c.id}')" title="${isAdminAuthenticated ? "Delete" : "🔒 Admin Required"}">
+              <button class="btn btn-danger btn-sm" onclick="handleDeleteCampaign(${escapeHtml(JSON.stringify(c.id))})" title="${isAdminAuthenticated ? "Delete" : "🔒 Admin Required"}">
                 🗑️
               </button>
             </div>
@@ -2173,21 +2105,18 @@
     }
 
     // Toggle Active Status
-    function handleToggleActive(id, newStatus, checkboxElem) {
+    async function handleToggleActive(id, newStatus, checkboxElem) {
+      checkboxElem.checked = !newStatus;
       if (!isAdminAuthenticated) {
-        checkboxElem.checked = !newStatus;
         openAdminModal();
-        showToast("🔒 Admin Login Required: Please sign in with studio password.", true);
         return;
       }
-
-      const cmp = allCampaigns.find(c => c.id === id);
-      if (!cmp) return;
-
-      cmp.is_active = Boolean(newStatus);
-      const statusText = cmp.is_active ? "Activated (LIVE)" : "Paused";
-      showToast(`⚡ "${cmp.title || cmp.name}" is now ${statusText}.`);
-      saveCampaignsToGitHub(allCampaigns, `Toggle campaign ${cmp.name} to ${statusText}`);
+      checkboxElem.disabled = true;
+      try {
+        await saveCampaignChange({ type: "edit", id, fields: { is_active: newStatus } }, "Change campaign status");
+      } finally {
+        checkboxElem.disabled = false;
+      }
     }
 
     // Edit Campaign
@@ -2243,7 +2172,7 @@
       document.getElementById("campaignModal").style.display = "none";
     }
 
-    function handleCampaignSubmit(e) {
+    async function handleCampaignSubmit(e) {
       e.preventDefault();
       if (!isAdminAuthenticated) {
         closeCampaignModal();
@@ -2268,57 +2197,52 @@
       const priority = parseInt(document.getElementById("cmpPriority").value) || 50;
       const isActive = document.getElementById("cmpStatus").value === "true";
 
-      if (id) {
-        const idx = allCampaigns.findIndex(c => c.id === id);
-        if (idx !== -1) {
-          allCampaigns[idx] = {
-            ...allCampaigns[idx],
-            name, title: name, target_game_id: gameId,
-            ad_type: adType, ad_unit: adUnit,
-            target_url: targetUrl, target_url_android: targetUrl, target_url_web: targetUrl,
-            creative_icon_url: iconUrl,
-            creative_interstitial_url: creativeUrl,
-            creative_interstitial_portrait_url: portraitUrl || creativeUrl,
-            creative_interstitial_landscape_url: landscapeUrl,
-            rotation_seconds: rotSec,
-            priority, is_active: isActive
-          };
-          showToast(`✅ "${name}" updated successfully!`);
+      const fields = {
+        name, title: name, target_game_id: gameId, ad_type: adType, ad_unit: adUnit,
+        target_url: targetUrl, creative_icon_url: iconUrl,
+        creative_interstitial_url: creativeUrl,
+        creative_interstitial_portrait_url: portraitUrl || creativeUrl,
+        creative_interstitial_landscape_url: landscapeUrl,
+        rotation_seconds: rotSec, priority, is_active: isActive
+      };
+      const original = allCampaigns.find(campaign => campaign.id === id);
+      if (id && !original) {
+        showToast("This campaign was removed. Reload the dashboard.", true);
+        return;
+      }
+      const campaignId = id || "cmp_" + (adType === "icon" ? "icon_" : "") + crypto.randomUUID();
+      let change;
+      if (original) {
+        if (targetUrl !== (original.target_url || original.target_url_android || "")) {
+          Object.assign(fields, { target_url_android: targetUrl, target_url_web: targetUrl });
+        } else {
+          delete fields.target_url;
         }
+        const edits = Object.fromEntries(Object.entries(fields).filter(([key, value]) => original[key] !== value));
+        change = { type: "edit", id: campaignId, fields: edits };
       } else {
-        const newId = "cmp_" + (adType === "icon" ? "icon_" : "") + Date.now();
-        const newCampaign = {
-          id: newId, name, title: name,
-          target_game_id: gameId, platform: "all",
+        change = { type: "create", id: campaignId, fields: {
+          ...fields, id: campaignId, platform: "all",
           description: "Download and experience our studio title today!",
-          target_url: targetUrl, target_url_android: targetUrl, target_url_ios: targetUrl, target_url_web: targetUrl,
-          ad_type: adType, ad_unit: adUnit,
-          creative_icon_url: iconUrl,
-          creative_interstitial_url: creativeUrl,
-          creative_interstitial_portrait_url: portraitUrl || creativeUrl,
-          creative_interstitial_landscape_url: landscapeUrl,
-          creative_banner_url: iconUrl,
-          rotation_seconds: rotSec,
-          priority, frequency_cap: 0, is_active: isActive,
-          impressions: 0, clicks: 0
-        };
-        allCampaigns.unshift(newCampaign);
-        showToast(`🎉 New campaign "${name}" created!`);
+          target_url_android: targetUrl, target_url_ios: targetUrl, target_url_web: targetUrl,
+          creative_banner_url: iconUrl, frequency_cap: 0, impressions: 0, clicks: 0
+        } };
       }
 
-      closeCampaignModal();
-      saveCampaignsToGitHub(allCampaigns, `Save campaign ${name}`);
+      const button = e.currentTarget.querySelector('[type="submit"]');
+      button.disabled = true;
+      try {
+        if (await saveCampaignChange(change, `Save campaign ${name}`)) closeCampaignModal();
+      } finally {
+        button.disabled = false;
+      }
     }
 
     function handleDeleteCampaign(id) {
       requireAdmin("delete this campaign", () => {
-        const cmp = allCampaigns.find(c => c.id === id);
-        if (!cmp) return;
-        if (confirm(`Delete campaign "${cmp.title || cmp.name}"?
-This removes it from game clients.`)) {
-          allCampaigns = allCampaigns.filter(c => c.id !== id);
-          showToast(`🗑️ "${cmp.title || cmp.name}" deleted.`);
-          saveCampaignsToGitHub(allCampaigns, `Delete campaign ${cmp.name}`);
+        const campaign = allCampaigns.find(item => item.id === id);
+        if (campaign && confirm(`Delete campaign "${campaign.title || campaign.name}" from the game feed?`)) {
+          saveCampaignChange({ type: "delete", id }, `Delete campaign ${campaign.name}`);
         }
       });
     }
@@ -2570,7 +2494,7 @@ This removes it from game clients.`)) {
 
       showToast(`🎯 Icon Ad Clicked! Directing to store for ${cmp.title || cmp.name}...`);
       const targetUrl = cmp.target_url || cmp.target_url_android;
-      if (targetUrl) window.open(targetUrl, "_blank");
+      if (/^https?:\/\//i.test(targetUrl)) window.open(targetUrl, "_blank", "noopener,noreferrer");
     }
 
     function simulateInterstitialClick() {
@@ -2584,7 +2508,7 @@ This removes it from game clients.`)) {
 
       showToast(`🎯 Interstitial Clicked! Directing to ${cmp.title || cmp.name}...`);
       const targetUrl = cmp.target_url || cmp.target_url_android;
-      if (targetUrl) window.open(targetUrl, "_blank");
+      if (/^https?:\/\//i.test(targetUrl)) window.open(targetUrl, "_blank", "noopener,noreferrer");
     }
 
     function startSimTimer() {
@@ -2711,13 +2635,13 @@ This removes it from game clients.`)) {
           <tr>
             <td>
               <div style="font-weight: 700; color: white;">${escapeHtml(c.title || c.name)}</div>
-              <div style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">${c.target_game_id}</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">${escapeHtml(c.target_game_id)}</div>
             </td>
             <td>
-              ${isIcon ? '<span class="badge-icon-tag">⭐ ICON: ' + (c.ad_unit || "corner") + '</span>' : '<span class="badge-unit">' + (c.ad_type || "interstitial") + '</span>'}
+              ${isIcon ? '<span class="badge-icon-tag">⭐ ICON: ' + escapeHtml((c.ad_unit || "corner")) + '</span>' : '<span class="badge-unit">' + escapeHtml((c.ad_type || "interstitial")) + '</span>'}
             </td>
-            <td style="font-family: var(--font-mono);">${(c.impressions || 0).toLocaleString()}</td>
-            <td style="font-family: var(--font-mono); font-weight: 700; color: #34d399;">${(c.clicks || 0).toLocaleString()}</td>
+            <td style="font-family: var(--font-mono);">${escapeHtml((c.impressions || 0).toLocaleString())}</td>
+            <td style="font-family: var(--font-mono); font-weight: 700; color: #34d399;">${escapeHtml((c.clicks || 0).toLocaleString())}</td>
             <td>
               <div class="ctr-bar-bg"><div class="ctr-bar-fill" style="width: ${barWidth}%;"></div></div>
               <strong style="font-family: var(--font-mono);">${ctr}%</strong>
@@ -2805,7 +2729,7 @@ This removes it from game clients.`)) {
         return `
           <div class="asset-card" id="assetCard_${idx}">
             <div class="asset-preview">
-              <img src="${a.path}" alt="${escapeHtml(a.name)}" onerror="this.src='creatives/creative_truck_icon.png'">
+              <img src="${escapeHtml(a.path)}" alt="${escapeHtml(a.name)}" onerror="this.src='creatives/creative_truck_icon.png'">
             </div>
             <div class="asset-info">
               <div class="asset-name" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</div>
@@ -2947,7 +2871,7 @@ This removes it from game clients.`)) {
         return `
           <div class="asset-card" style="border: 1px solid ${isRecommended ? 'var(--primary)' : 'var(--border-subtle)'}; cursor: pointer; padding: 0.5rem;" onclick="selectAssetForFieldByIndex(${idx})">
             <div class="asset-preview" style="height: 90px; background: #000;">
-              <img src="${a.path}" alt="${escapeHtml(a.name)}" style="object-fit: contain; width: 100%; height: 100%;" onerror="this.src='creatives/creative_truck_icon.png'">
+              <img src="${escapeHtml(a.path)}" alt="${escapeHtml(a.name)}" style="object-fit: contain; width: 100%; height: 100%;" onerror="this.src='creatives/creative_truck_icon.png'">
             </div>
             <div class="asset-info" style="padding: 0.4rem 0.2rem;">
               <div class="asset-name" title="${escapeHtml(a.name)}" style="font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(a.name)}</div>
@@ -3021,54 +2945,47 @@ This removes it from game clients.`)) {
 
     async function handleAssetUploadSubmit(event) {
       event.preventDefault();
-      const fileInput = document.getElementById("assetFileInput");
+      const file = document.getElementById("assetFileInput").files[0];
       const filename = document.getElementById("assetTargetFilename").value.trim();
-      if (!fileInput.files[0] || !filename) return;
-
-      const token = getActiveToken();
-      if (!token) {
-        showToast("⚠️ Missing GitHub write token.", true);
+      if (!file || !/^[a-z0-9][a-z0-9._-]*$/i.test(filename)) {
+        showToast("Choose a file and use letters, numbers, dots, dashes or underscores in its name.", true);
         return;
       }
-
-      showToast(`⏳ Uploading creative ${filename} to GitHub repository...`);
-      const reader = new FileReader();
-      reader.onload = async function(e) {
-        const base64Content = e.target.result.split(",")[1];
-        const targetPath = `creatives/${filename}`;
-
-        try {
-          const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${targetPath}`, {
-            method: "PUT",
-            headers: { "Authorization": `token ${token}`, "Content-Type": "application/json", "Accept": "application/vnd.github.v3+json" },
-            body: JSON.stringify({ message: `Upload asset ${filename}`, content: base64Content, branch: GH_BRANCH })
+      const button = event.currentTarget.querySelector('[type="submit"]');
+      button.disabled = true;
+      try {
+        const uploaded = await queueWrite(async token => {
+          const path = `creatives/${filename}`;
+          const existing = await readContent(path, token);
+          if (!existing.ok && existing.status !== 404) throw await githubError(existing);
+          const previous = existing.ok ? await existing.json() : null;
+          if (previous && !confirm(`Replace "${filename}"? Games using this path will see the new image.`)) return false;
+          const content = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(",")[1]);
+            reader.onerror = () => reject(new Error("The selected file could not be read."));
+            reader.readAsDataURL(file);
           });
-
-          if (res.ok) {
-            const resData = await res.json();
-            const newSha = resData.content?.sha || "";
-            showToast(`✅ Asset uploaded! Path: ${targetPath}`);
-            KNOWN_ASSETS.unshift({ 
-              name: filename, 
-              path: targetPath, 
-              sha: newSha,
-              dims: "Custom Graphic", 
-              type: "custom",
-              sizeFormatted: `${(fileInput.files[0].size / 1024).toFixed(0)} KB`
-            });
-            renderAssets();
-            closeAssetUploadModal();
-          } else {
-            showToast("⚠️ Upload error", true);
-          }
-        } catch (err) {
-          showToast("⚠️ Network issue during upload.", true);
-        }
-      };
-      reader.readAsDataURL(fileInput.files[0]);
+          const body = { message: `Upload asset ${filename}`, content };
+          if (previous) body.sha = previous.sha;
+          const response = await writeContent(path, body, token);
+          if (!response.ok) throw await githubError(response);
+          const saved = await response.json();
+          KNOWN_ASSETS = [{ name: filename, path, sha: saved.content.sha, dims: "Custom Graphic",
+            type: "custom", sizeFormatted: `${Math.round(file.size / 1024)} KB` },
+            ...KNOWN_ASSETS.filter(asset => asset.path !== path)];
+          renderAssets();
+          showToast(`Creative committed to GitHub. ${path}`);
+          return true;
+        });
+        if (uploaded) closeAssetUploadModal();
+      } catch (error) {
+        showToast("Upload failed. " + error.message, true);
+      } finally {
+        button.disabled = false;
+      }
     }
 
-    // Utility Helpers
     function resolveImgUrl(url) {
       if (!url) return "creatives/creative_truck_icon.png";
       if (url.startsWith("http://") || url.startsWith("https://")) return url;
@@ -3077,7 +2994,7 @@ This removes it from game clients.`)) {
 
     function escapeHtml(str) {
       if (!str) return "";
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
     function showToast(msg, isError = false) {
@@ -3087,7 +3004,7 @@ This removes it from game clients.`)) {
       const toast = document.createElement("div");
       toast.className = "toast";
       if (isError) toast.style.borderLeftColor = "#ef4444";
-      toast.innerHTML = msg;
+      toast.textContent = msg;
 
       box.appendChild(toast);
       setTimeout(() => {
