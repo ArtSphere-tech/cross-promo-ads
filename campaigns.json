@@ -6,7 +6,7 @@
       "title": "My Family Town Pregnant Mommy",
       "target_game_id": "xyz",
       "ad_type": "interstitial",
-      "ad_unit": "main_play_button",
+      "ad_unit": "all",
       "target_url": "https://play.google.com/store/apps/details?id=my.family.town.pregnant.mommy.baby.newborn.care.games",
       "target_url_android": "https://play.google.com/store/apps/details?id=my.family.town.pregnant.mommy.baby.newborn.care.games",
       "target_url_ios": "",
