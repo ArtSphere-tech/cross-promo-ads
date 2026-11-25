@@ -1048,7 +1048,7 @@
       <div class="header-actions">
         <div class="system-status">
           <span class="status-dot"></span>
-          <span id="sysStatusText">Loading campaign feed…</span>
+          <span id="sysStatusText" role="status" aria-live="polite">Loading campaign feed…</span>
         </div>
 
         <button id="btnAuthTrigger" class="btn btn-secondary" onclick="handleAuthClick()">
@@ -1779,7 +1779,7 @@
         }
         closeAdminModal();
         setAdminState(true, true);
-        fetchRepoAssets();
+        loadCampaigns();
       } catch (error) {
         status.textContent = "GitHub sign-in failed. " + error.message;
       } finally {
@@ -1793,6 +1793,7 @@
       githubToken = "";
       try { sessionStorage.removeItem(TAB_TOKEN_KEY); } catch {}
       setAdminState(false);
+      loadCampaigns();
     }
 
     function requireAdmin(actionName, callback) {
@@ -1817,40 +1818,116 @@
       });
     }
 
-    // Campaign Active Status Normalizer
-    function isCampaignActive(c) {
-      if (!c) return false;
-      if (c.is_active === false || c.is_active === "false" || c.is_active === 0) return false;
-      if (c.status === "paused" || c.status === "inactive") return false;
-      return true;
+    function isCampaignActive(campaign) {
+      if (!campaign) return false;
+      if ([false, "false", 0].includes(campaign.is_active)) return false;
+      if ([true, "true", 1].includes(campaign.is_active)) return true;
+      return !["paused", "inactive"].includes(String(campaign.status).toLowerCase());
     }
 
-    // Load the same public feed that existing game clients use.
-    async function loadCampaigns() {
-      const status = document.getElementById("sysStatusText");
-      try {
-        const response = await request(GH_FILE, { cache: "no-cache" });
-        if (!response.ok) throw new Error(`Campaign feed HTTP ${response.status}.`);
-        const data = await response.json();
-        if (!Array.isArray(data.campaigns)) throw new Error("Invalid campaign feed.");
-        status.textContent = "Published feed loaded";
-        allCampaigns = data.campaigns.map(c => ({ ...c, is_active: isCampaignActive(c) }));
-        try { localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(allCampaigns)); } catch {}
-      } catch (error) {
-        try {
-          const cached = JSON.parse(localStorage.getItem("admatrix_campaigns_cache"));
-          if (Array.isArray(cached)) allCampaigns = cached;
-        } catch {}
-        status.textContent = "Published feed unavailable";
-        showToast("Could not refresh the campaign feed. " + error.message, true);
-      }
+    let campaignLoadVersion = 0;
+    let publishCheckTimer;
+    let publicCampaigns = null;
 
+    function applyCampaignFeed(feed) {
+      allCampaigns = feed.campaigns;
       updateKPIs();
       renderMainCampaigns();
       renderIconCampaigns();
       renderAnalytics();
-      renderAssets();
-      if (getActiveToken()) fetchRepoAssets();
+      updateSimulatorDisplay();
+    }
+
+    function parseCampaignFeed(json) {
+      const feed = JSON.parse(json);
+      if (!Array.isArray(feed?.campaigns)) throw new Error("Invalid campaign feed.");
+      return feed;
+    }
+
+    async function readRepositoryFeed(token) {
+      const response = await readContent(GH_FILE, token);
+      if (!response.ok) throw await githubError(response);
+      const file = await response.json();
+      const bytes = Uint8Array.from(atob(file.content.replace(/\s/g, "")), ch => ch.charCodeAt(0));
+      const json = new TextDecoder().decode(bytes);
+      return { feed: parseCampaignFeed(json), sha: file.sha };
+    }
+
+    async function readPublishedFeed() {
+      const response = await request(`${GH_FILE}?t=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Campaign feed HTTP ${response.status}.`);
+      return parseCampaignFeed(await response.text());
+    }
+
+    function cachePublishedFeed(feed) {
+      try { localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(feed.campaigns)); } catch {}
+    }
+
+    function saveIndicator(message) {
+      const status = document.getElementById("sysStatusText");
+      if (status) status.textContent = message;
+    }
+
+    function renderPublishingBadges() {
+      renderMainCampaigns();
+      renderIconCampaigns();
+    }
+
+    async function checkPublishedFeed(expected, version, remaining = 8) {
+      let published;
+      try { published = await readPublishedFeed(); } catch {}
+      if (version !== campaignLoadVersion) return;
+      if (published) {
+        publicCampaigns = published.campaigns;
+        cachePublishedFeed(published);
+      }
+      const current = published && JSON.stringify(published) === JSON.stringify(expected);
+      saveIndicator(current ? "Published feed is up to date" :
+        (!published ? "Saved on GitHub · public feed could not be checked" :
+          (remaining ? "Saved on GitHub · public feed is still publishing" :
+            "Saved on GitHub · public feed still differs. Refresh to recheck.")));
+      renderPublishingBadges();
+      if (!current && remaining > 0) {
+        publishCheckTimer = setTimeout(() => checkPublishedFeed(expected, version, remaining - 1), 8000);
+      }
+    }
+
+    async function loadCampaigns() {
+      clearTimeout(publishCheckTimer);
+      const version = ++campaignLoadVersion;
+      const token = getActiveToken();
+      publicCampaigns = null;
+      saveIndicator(token ? "Loading saved campaigns from GitHub…" : "Loading published campaign feed…");
+      if (token) {
+        try {
+          const { feed } = await readRepositoryFeed(token);
+          if (version !== campaignLoadVersion) return;
+          applyCampaignFeed(feed);
+          saveIndicator("Saved campaigns loaded · checking public feed");
+          checkPublishedFeed(feed, version);
+          fetchRepoAssets();
+          startSimulatorLoops();
+          return;
+        } catch {
+          if (version !== campaignLoadVersion) return;
+        }
+      }
+      try {
+        const feed = await readPublishedFeed();
+        if (version !== campaignLoadVersion) return;
+        publicCampaigns = feed.campaigns;
+        cachePublishedFeed(feed);
+        applyCampaignFeed(feed);
+        saveIndicator(token ? "Showing public feed · saved GitHub version unavailable" : "Published feed loaded");
+      } catch (error) {
+        if (version !== campaignLoadVersion) return;
+        try {
+          const cached = JSON.parse(localStorage.getItem("admatrix_campaigns_cache"));
+          if (Array.isArray(cached)) applyCampaignFeed({ campaigns: cached });
+        } catch {}
+        saveIndicator("Public feed unavailable · showing cached campaigns if available");
+        showToast("Could not refresh the campaign feed. " + error.message, true);
+      }
       startSimulatorLoops();
     }
 
@@ -1886,7 +1963,7 @@
     }
 
     async function readContent(path, token) {
-      return request(`${contentsUrl(path)}?ref=${encodeURIComponent(GH_BRANCH)}`, {
+      return request(`${contentsUrl(path)}?ref=${encodeURIComponent(GH_BRANCH)}&_t=${Date.now()}`, {
         headers: githubHeaders(token), cache: "no-store"
       });
     }
@@ -1915,16 +1992,34 @@
       try {
         await queueWrite(async token => {
           for (let attempt = 0; attempt < 3; attempt++) {
-            const read = await readContent(GH_FILE, token);
-            if (!read.ok) throw await githubError(read);
-            const file = await read.json();
-            const bytes = Uint8Array.from(atob(file.content.replace(/\s/g, "")), ch => ch.charCodeAt(0));
-            const feed = JSON.parse(new TextDecoder().decode(bytes));
-            if (!Array.isArray(feed.campaigns)) throw new Error("The published campaign feed is invalid.");
+            const { feed, sha } = await readRepositoryFeed(token);
             const index = feed.campaigns.findIndex(campaign => campaign.id === change.id);
-            if (change.type !== "create" && index < 0) throw new Error("This campaign was removed. Reload the dashboard.");
             const before = feed.campaigns[index];
-            const candidate = { ...before, ...change.fields };
+            if (change.type === "delete" && !before) {
+              finishCampaignSave(feed, token);
+              return;
+            }
+            if (change.type === "edit" && !before) throw new Error("This campaign was removed. Reload the dashboard.");
+            if (change.type === "create" && before) {
+              if (!Object.entries(change.fields).every(([key, value]) => before[key] === value)) {
+                throw new Error("This new campaign already exists with different values. Refresh before editing it.");
+              }
+              finishCampaignSave(feed, token);
+              return;
+            }
+            const fields = { ...change.fields };
+            if (before?.status !== undefined && typeof fields.is_active === "boolean") {
+              fields.status = fields.is_active ? "active" : "paused";
+            }
+            if (change.baseline && Object.keys(fields).some(key =>
+              before[key] !== change.baseline[key] && before[key] !== fields[key])) {
+              throw new Error("Another save changed this campaign while it was open. Reopen it before saving.");
+            }
+            if (change.type === "edit" && Object.entries(fields).every(([key, value]) => before[key] === value)) {
+              finishCampaignSave(feed, token);
+              return;
+            }
+            const candidate = { ...before, ...fields };
             if (change.type === "create" || (change.type === "edit" && isCampaignActive(candidate) &&
                 (!isCampaignActive(before) || Object.keys(change.fields).some(key => key.startsWith("creative_"))))) {
               const images = [candidate.creative_icon_url, candidate.creative_interstitial_url,
@@ -1941,20 +2036,14 @@
             }
             if (change.type === "create") feed.campaigns.unshift(change.fields);
             else if (change.type === "delete") feed.campaigns.splice(index, 1);
-            else Object.assign(feed.campaigns[index], change.fields);
+            else Object.assign(feed.campaigns[index], fields);
             const content = btoa(Array.from(new TextEncoder().encode(JSON.stringify(feed, null, 2)), byte => String.fromCharCode(byte)).join(""));
-            const response = await writeContent(GH_FILE, { message, content, sha: file.sha }, token);
+            const response = await writeContent(GH_FILE, { message, content, sha }, token);
             if (response.status === 409 && attempt < 2) continue;
             if (!response.ok) throw await githubError(response, true);
 
-            allCampaigns = feed.campaigns;
-            try { localStorage.setItem("admatrix_campaigns_cache", JSON.stringify(allCampaigns)); } catch {}
-            updateKPIs();
-            renderMainCampaigns();
-            renderIconCampaigns();
-            renderAnalytics();
-            updateSimulatorDisplay();
-            showToast("Campaign change committed to GitHub.");
+            finishCampaignSave(feed, token);
+            showToast("Campaign saved on GitHub. Checking the public feed.");
             return;
           }
         });
@@ -1965,6 +2054,15 @@
         showToast(message, true);
         return false;
       }
+    }
+
+    function finishCampaignSave(feed, token) {
+      if (token !== getActiveToken()) return;
+      clearTimeout(publishCheckTimer);
+      const version = ++campaignLoadVersion;
+      applyCampaignFeed(feed);
+      saveIndicator("Saved on GitHub · checking public feed");
+      checkPublishedFeed(feed, version);
     }
 
     function renderMainCampaigns() {
@@ -2040,10 +2138,15 @@
       container.innerHTML = filtered.map(c => renderCardHtml(c, true)).join("");
     }
 
+    const pendingCampaignToggles = new Set();
+
     function renderCardHtml(c, isIconMode) {
       const realIndex = allCampaigns.findIndex(item => item.id === c.id);
       const stats = campaignStats(c.id);
       const isLive = isCampaignActive(c);
+      const publicVersion = publicCampaigns?.find(item => item.id === c.id);
+      const statusPending = Boolean(getActiveToken() && publicCampaigns &&
+        (!publicVersion || isCampaignActive(publicVersion) !== isLive));
       const hasPortrait = !!(c.creative_interstitial_portrait_url || (!isIconMode && c.creative_interstitial_url));
       const hasLandscape = !!(c.creative_interstitial_landscape_url);
       const imgUrl = isIconMode 
@@ -2064,6 +2167,7 @@
                 <span class="campaign-title">${escapeHtml(c.title || c.name)}</span>
                 ${isIconMode ? '<span class="badge-icon-tag">📍 ' + escapeHtml((c.ad_unit || "all")) + '</span>' : '<span class="badge-unit">' + escapeHtml((c.ad_unit || "all")) + '</span>'}
                 ${isLive ? '<span class="badge-active">● ACTIVE</span>' : '<span class="badge-paused">○ PAUSED</span>'}
+                ${statusPending ? '<span class="badge-unit">Public update pending</span>' : ''}
               </div>
 
               <div class="campaign-desc">${escapeHtml(c.description || "In-game cross-promotion ad for studio players")}</div>
@@ -2102,7 +2206,7 @@
             <div class="campaign-card-actions">
               <!-- Switch -->
               <label class="switch ${isAdminAuthenticated ? "" : "locked"}" title="${isAdminAuthenticated ? (isLive ? "Click to Pause Ad" : "Click to Activate Ad") : "🔒 Admin Login Required"}">
-                <input type="checkbox" ${isLive ? "checked" : ""} onchange="handleToggleActive(${escapeHtml(JSON.stringify(c.id))}, this.checked, this)">
+                <input type="checkbox" ${isLive ? "checked" : ""} ${pendingCampaignToggles.has(c.id) ? "disabled" : ""} onchange="handleToggleActive(${escapeHtml(JSON.stringify(c.id))}, this.checked, this)">
                 <span class="slider"></span>
               </label>
 
@@ -2133,11 +2237,15 @@
         openAdminModal();
         return;
       }
+      if (pendingCampaignToggles.has(id)) return;
+      pendingCampaignToggles.add(id);
       checkboxElem.disabled = true;
       try {
-        await saveCampaignChange({ type: "edit", id, fields: { is_active: newStatus } }, "Change campaign status");
+        await saveCampaignChange({ type: "edit", id, fields: { is_active: newStatus } }, newStatus ? "Activate campaign" : "Pause campaign");
       } finally {
+        pendingCampaignToggles.delete(id);
         checkboxElem.disabled = false;
+        renderPublishingBadges();
       }
     }
 
@@ -2152,7 +2260,12 @@
       });
     }
 
+    let editingCampaign = null;
+    let newCampaignId = null;
+
     function openCampaignModal(mode = "interstitial", editData = null) {
+      editingCampaign = editData ? { ...editData } : null;
+      newCampaignId = null;
       document.getElementById("campaignSaveStatus").textContent = "";
       const isIcon = mode === "icon";
       document.getElementById("modalCampaignTitle").textContent = editData ? `Edit ${isIcon ? "Icon" : "Main"} Campaign` : `Create New ${isIcon ? "Icon" : "Main"} Campaign`;
@@ -2232,7 +2345,7 @@
         creative_interstitial_landscape_url: landscapeUrl,
         rotation_seconds: rotSec, priority, is_active: isActive
       };
-      const original = allCampaigns.find(campaign => campaign.id === id);
+      const original = editingCampaign;
       if (id && !original) {
         showToast("This campaign was removed. Reload the dashboard.", true);
         return;
@@ -2246,7 +2359,8 @@
         status.textContent = "Select an icon and at least one interstitial creative for interstitial ads.";
         return;
       }
-      const campaignId = id || "cmp_" + (adType === "icon" ? "icon_" : "") + crypto.randomUUID();
+      if (!id && !newCampaignId) newCampaignId = "cmp_" + (adType === "icon" ? "icon_" : "") + crypto.randomUUID();
+      const campaignId = id || newCampaignId;
       let change;
       if (original) {
         if (targetUrl === (original.target_url_android || original.target_url || "")) {
@@ -2254,7 +2368,8 @@
           delete fields.target_url_android;
         }
         const edits = Object.fromEntries(Object.entries(fields).filter(([key, value]) => original[key] !== value));
-        change = { type: "edit", id: campaignId, fields: edits };
+        if (isActive === isCampaignActive(original)) delete edits.is_active;
+        change = { type: "edit", id: campaignId, fields: edits, baseline: original };
       } else {
         change = { type: "create", id: campaignId, fields: {
           ...fields, id: campaignId, platform: "all",
@@ -2736,9 +2851,12 @@
     }
 
     // Creative Assets Synchronization & Management
+    let assetListVersion = 0;
+
     async function fetchRepoAssets() {
       const token = getActiveToken();
       if (!token) return;
+      const version = ++assetListVersion;
 
       try {
         const res = await request(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/creatives?ref=${GH_BRANCH}&_t=${Date.now()}`, {
@@ -2782,7 +2900,7 @@
               };
             });
 
-            if (fetched.length > 0) {
+            if (version === assetListVersion && token === getActiveToken()) {
               KNOWN_ASSETS = fetched;
               renderAssets();
             }
@@ -2894,6 +3012,7 @@
               body: JSON.stringify({ message: `Delete creative ${name}`, sha, branch: GH_BRANCH })
             });
             if (!response.ok) throw await githubError(response, true);
+            assetListVersion++;
             KNOWN_ASSETS = KNOWN_ASSETS.filter(asset => asset.path !== path);
             renderAssets();
             showToast(`Creative deleted: ${name}`);
@@ -2905,6 +3024,7 @@
     }
 
     let currentPickerTarget = "portrait";
+    let pickableAssets = [];
 
     function pickFromAssets(targetField) {
       currentPickerTarget = targetField;
@@ -2926,7 +3046,8 @@
         title.textContent = "Select App Icon Graphic";
       }
 
-      grid.innerHTML = KNOWN_ASSETS.map((a, idx) => {
+      pickableAssets = [...KNOWN_ASSETS];
+      grid.innerHTML = pickableAssets.map((a, idx) => {
         const isRecommended = (a.type === targetField);
         return `
           <div class="asset-card" style="border: 1px solid ${isRecommended ? 'var(--primary)' : 'var(--border-subtle)'}; cursor: pointer; padding: 0.5rem;" onclick="selectAssetForFieldByIndex(${idx})">
@@ -2948,7 +3069,7 @@
     }
 
     function selectAssetForFieldByIndex(idx) {
-      const a = KNOWN_ASSETS[idx];
+      const a = pickableAssets[idx];
       if (!a) return;
       selectAssetForField(a.path);
     }
@@ -3046,11 +3167,12 @@
           const response = await writeContent(path, body, token);
           if (!response.ok) throw await githubError(response, true);
           const saved = await response.json();
+          assetListVersion++;
           KNOWN_ASSETS = [{ name: filename, path, sha: saved.content.sha, dims: `${width} × ${height} pixels`,
             type: "custom", sizeFormatted: `${Math.round(file.size / 1024)} KB` },
             ...KNOWN_ASSETS.filter(asset => asset.path !== path)];
           renderAssets();
-          showToast(`Creative committed to GitHub. ${path}`);
+          showToast(`Creative saved on GitHub. Public previews appear after publishing. ${path}`);
           return path;
         });
         status.textContent = "";
