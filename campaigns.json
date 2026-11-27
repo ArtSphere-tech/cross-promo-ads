@@ -17,7 +17,7 @@
       "creative_interstitial_landscape_url": "creatives/creative_newborn_care_family_town__1_.png",
       "rotation_seconds": 7,
       "priority": 50,
-      "is_active": false,
+      "is_active": true,
       "id": "cmp_1ca077ba-aa85-4a0b-af30-1166e8ba35a3",
       "platform": "all",
       "description": "Download and experience our studio title today!",
